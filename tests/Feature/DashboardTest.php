@@ -23,7 +23,7 @@ class DashboardTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->get(route('dashboard'));
-        $response->assertInertia(fn(Assert $page) => $page
+        $response->assertInertia(fn (Assert $page) => $page
             ->component('Workspace')
             ->where('board', null));
     }
@@ -31,7 +31,7 @@ class DashboardTest extends TestCase
     public function test_guests_can_use_the_local_workspace()
     {
         $this->get(route('home'))
-            ->assertInertia(fn(Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page
                 ->component('Workspace')
                 ->where('board', null));
     }
@@ -135,7 +135,7 @@ class DashboardTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('boards.show', $board))
-            ->assertInertia(fn(Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page
                 ->where('board.name', 'Mine'));
     }
 

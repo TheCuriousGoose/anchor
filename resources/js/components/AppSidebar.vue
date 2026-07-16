@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Plus, Search, Users } from '@lucide/vue';
+import { ChartColumn, LayoutGrid, Plus, ScrollText, Search, Shield, Users, UsersRound } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppLogo from '@/components/AppLogo.vue';
@@ -22,14 +22,20 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { useUserChannel } from '@/composables/useUserChannel';
 
 const page = usePage();
 const boards = computed(() => page.props.sidebarBoards);
+const isAdmin = computed(() => page.props.auth.user?.role === 'admin');
 const { isCurrentUrl } = useCurrentUrl();
 const { t } = useI18n();
 
 const commandOpen = ref(false);
 const createOpen = ref(false);
+
+// The sidebar is on every authenticated page, so this is where sharing changes are picked
+// up — the board list stays live even when you're nowhere near the board in question.
+useUserChannel();
 </script>
 
 <template>
@@ -82,6 +88,47 @@ const createOpen = ref(false);
                         <SidebarMenuBadge v-if="board.openTasksCount > 0">{{
                             board.openTasksCount
                             }}</SidebarMenuBadge>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarGroup>
+
+            <SidebarGroup v-if="isAdmin">
+                <SidebarGroupLabel>
+                    <Shield class="mr-1.5 size-3.5" />
+                    {{ t('sidebar.admin') }}
+                </SidebarGroupLabel>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton as-child :is-active="isCurrentUrl('/admin')" :tooltip="t('sidebar.adminOverview')">
+                            <Link href="/admin">
+                                <ChartColumn />
+                                <span>{{ t('sidebar.adminOverview') }}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton as-child :is-active="isCurrentUrl('/admin/users')" :tooltip="t('sidebar.adminUsers')">
+                            <Link href="/admin/users">
+                                <UsersRound />
+                                <span>{{ t('sidebar.adminUsers') }}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton as-child :is-active="isCurrentUrl('/admin/boards')" :tooltip="t('sidebar.adminBoards')">
+                            <Link href="/admin/boards">
+                                <LayoutGrid />
+                                <span>{{ t('sidebar.adminBoards') }}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton as-child :is-active="isCurrentUrl('/admin/audit')" :tooltip="t('sidebar.adminAudit')">
+                            <Link href="/admin/audit">
+                                <ScrollText />
+                                <span>{{ t('sidebar.adminAudit') }}</span>
+                            </Link>
+                        </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarGroup>

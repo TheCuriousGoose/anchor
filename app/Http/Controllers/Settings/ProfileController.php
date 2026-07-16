@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Enums\AuditAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfilePhotoUpdateRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\AuditLog;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,6 +76,9 @@ class ProfileController extends Controller
     public function destroy(ProfileDeleteRequest $request): RedirectResponse
     {
         $user = $request->user();
+
+        // Recorded before logout, so AuditLog::record() can still resolve the actor.
+        AuditLog::record(AuditAction::AccountSelfDeleted, $user, $user->email);
 
         Auth::logout();
 

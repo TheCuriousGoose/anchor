@@ -2,7 +2,6 @@
 import { Link, router } from '@inertiajs/vue3';
 import { LogOut, Settings } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -33,13 +32,6 @@ defineProps<Props>();
             <UserInfo :user="user" :show-email="true" />
         </div>
     </DropdownMenuLabel>
-    <DropdownMenuSeparator />
-    <div class="flex items-center justify-between px-2 py-1.5">
-        <span class="text-xs text-muted-foreground">{{
-            t('userMenu.language')
-        }}</span>
-        <LanguageSwitcher @click.stop />
-    </div>
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
         <DropdownMenuItem :as-child="true">

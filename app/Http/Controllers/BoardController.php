@@ -2,6 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AuditAction;
+use App\Events\BoardDeleted;
+use App\Events\BoardListChanged;
+use App\Events\BoardUpdated;
+use App\Events\TaskCreated;
+use App\Events\TaskDeleted;
+use App\Events\TasksReordered;
+use App\Events\TaskUpdated;
 use App\Http\Requests\ImportBoardRequest;
 use App\Http\Requests\ReorderTasksRequest;
 use App\Http\Requests\StoreBoardRequest;
@@ -10,6 +18,7 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateBoardRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\BoardResource;
+use App\Models\AuditLog;
 use App\Models\Board;
 use App\Models\Task;
 use App\Support\HtmlSanitizer;
@@ -64,13 +73,29 @@ class BoardController extends Controller
 
         $board->update($request->validated());
 
+        broadcast(new BoardUpdated($board))->toOthers();
+        broadcast(new BoardListChanged($board->memberIds()))->toOthers();
+
         return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels'])))->resolve());
     }
 
     public function destroy(Request $request, Board $board): JsonResponse
     {
         $this->authorize('delete', $board);
+
+        // Both are captured before the delete: memberIds() can't be queried afterwards,
+        // and the event must not hold a model that no longer exists.
+        $memberIds = $board->memberIds();
+        $name = $board->name;
+
+        AuditLog::record(AuditAction::BoardDeleted, $board, $name, [
+            'collaborators_affected' => count($memberIds) - 1,
+        ]);
+
         $board->delete();
+
+        broadcast(new BoardDeleted($board->id, $name))->toOthers();
+        broadcast(new BoardListChanged($memberIds))->toOthers();
 
         return response()->json(status: 204);
     }
@@ -98,7 +123,16 @@ class BoardController extends Controller
             return $task;
         });
 
-        return response()->json($task->load('labels'), 201);
+        // `refresh` so database-side defaults (`completed`) and untouched nullable columns
+        // (`description`, `due_date`) are present rather than silently absent — a freshly
+        // created model only holds the attributes that were explicitly set. Load once, then
+        // broadcast and respond from the same instance so collaborators receive
+        // byte-for-byte what the acting client got back.
+        $task->refresh()->load('labels');
+
+        broadcast(new TaskCreated($task))->toOthers();
+
+        return response()->json($task, 201);
     }
 
     public function updateTask(UpdateTaskRequest $request, Task $task): JsonResponse
@@ -117,13 +151,22 @@ class BoardController extends Controller
             $task->labels()->sync($task->board->labels()->whereIn('id', $data['label_ids'])->pluck('id'));
         }
 
-        return response()->json($task->load('labels'));
+        $task->load('labels');
+
+        broadcast(new TaskUpdated($task))->toOthers();
+
+        return response()->json($task);
     }
 
     public function destroyTask(Request $request, Task $task): JsonResponse
     {
         $this->authorize('delete', $task);
+
+        [$boardId, $taskId] = [$task->board_id, $task->id];
+
         $task->delete();
+
+        broadcast(new TaskDeleted($boardId, $taskId))->toOthers();
 
         return response()->json(status: 204);
     }
@@ -155,6 +198,8 @@ class BoardController extends Controller
                 Task::where('id', $taskId)->where('board_id', $board->id)->update(['position' => $position]);
             }
         });
+
+        broadcast(new TasksReordered($board->id, $taskIds))->toOthers();
 
         return response()->json($board->tasks()->get());
     }

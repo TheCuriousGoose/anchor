@@ -63,7 +63,23 @@ class Board extends Model
      */
     public function scopeAccessibleBy(Builder $query, User $user): Builder
     {
-        return $query->where('user_id', $user->id)
-            ->orWhereHas('collaborators', fn ($collaborators) => $collaborators->where('users.id', $user->id));
+        // Grouped so callers can append their own where() without the OR swallowing it.
+        return $query->where(fn (Builder $accessible) => $accessible
+            ->where('user_id', $user->id)
+            ->orWhereHas('collaborators', fn ($collaborators) => $collaborators->where('users.id', $user->id)));
+    }
+
+    /**
+     * Everyone who can see this board: the owner plus every collaborator. Used to fan
+     * broadcasts out to each member's own channel.
+     *
+     * @return array<int, int>
+     */
+    public function memberIds(): array
+    {
+        return array_values(array_unique([
+            $this->user_id,
+            ...$this->collaborators()->pluck('users.id')->all(),
+        ]));
     }
 }

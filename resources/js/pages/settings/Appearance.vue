@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import Heading from '@/components/Heading.vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { edit } from '@/routes/appearance';
+
+const { t } = useI18n();
 
 defineOptions({
     layout: {
@@ -17,16 +21,25 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Appearance settings" />
+    <Head :title="t('settings.appearance.title')" />
 
-    <h1 class="sr-only">Appearance settings</h1>
+    <h1 class="sr-only">{{ t('settings.appearance.title') }}</h1>
 
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Appearance settings"
-            description="Update the appearance settings for your account"
+            :title="t('settings.appearance.title')"
+            :description="t('settings.appearance.description')"
         />
         <AppearanceTabs />
+    </div>
+
+    <div class="space-y-6">
+        <Heading
+            variant="small"
+            :title="t('settings.appearance.languageTitle')"
+            :description="t('settings.appearance.languageDescription')"
+        />
+        <LanguageSwitcher variant="tabs" />
     </div>
 </template>

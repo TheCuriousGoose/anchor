@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AuditAction;
+use App\Events\BoardAccessChanged;
+use App\Events\BoardAccessGranted;
+use App\Events\BoardAccessRevoked;
+use App\Events\BoardCollaboratorsChanged;
 use App\Http\Requests\ShareBoardRequest;
 use App\Http\Requests\UpdateBoardShareRequest;
+use App\Models\AuditLog;
 use App\Models\Board;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +29,10 @@ class BoardShareController extends Controller
             $collaborator->id => ['role' => $data['role']],
         ]);
 
+        // The new collaborator isn't on the board channel yet, so they're told directly.
+        broadcast(new BoardAccessGranted($collaborator->id, $board, $data['role']));
+        broadcast(new BoardCollaboratorsChanged($board))->toOthers();
+
         return response()->json($this->collaborator($board, $collaborator->id), 201);
     }
 
@@ -30,7 +40,13 @@ class BoardShareController extends Controller
     {
         $this->authorize('manageSharing', $board);
 
-        $board->collaborators()->updateExistingPivot($user->id, ['role' => $request->validated('role')]);
+        /** @var string $role */
+        $role = $request->validated('role');
+
+        $board->collaborators()->updateExistingPivot($user->id, ['role' => $role]);
+
+        broadcast(new BoardAccessChanged($user->id, $board->id, $role));
+        broadcast(new BoardCollaboratorsChanged($board))->toOthers();
 
         return response()->json($this->collaborator($board, $user->id));
     }
@@ -40,6 +56,13 @@ class BoardShareController extends Controller
         $this->authorize('manageSharing', $board);
 
         $board->collaborators()->detach($user->id);
+
+        AuditLog::record(AuditAction::BoardShareRevoked, $board, $board->name, [
+            'collaborator_email' => $user->email,
+        ]);
+
+        broadcast(new BoardAccessRevoked($user->id, $board->id, $board->name));
+        broadcast(new BoardCollaboratorsChanged($board))->toOthers();
 
         return response()->json(status: 204);
     }

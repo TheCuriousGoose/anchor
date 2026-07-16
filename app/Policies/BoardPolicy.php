@@ -35,10 +35,16 @@ class BoardPolicy
         return $this->delete($user, $board);
     }
 
+    /**
+     * Read the pivot role, never a bare `role` column. `users` also has a `role`
+     * (see UserRole), so selecting an unqualified `role` off this join is ambiguous,
+     * and selecting `board_user.role` would hydrate it onto User::$role and trip the
+     * UserRole cast. Only the aliased `pivot_role` is safe on both counts.
+     */
     private function roleFor(User $user, Board $board): ?string
     {
         return $board->relationLoaded('collaborators')
             ? $board->collaborators->firstWhere('id', $user->id)?->pivot->role
-            : $board->collaborators()->where('users.id', $user->id)->value('role');
+            : $board->collaborators()->where('users.id', $user->id)->first()?->pivot->role;
     }
 }

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NoteCreated;
+use App\Events\NoteDeleted;
+use App\Events\NoteUpdated;
 use App\Http\Requests\StoreImageRequest;
 use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
@@ -24,6 +27,8 @@ class NoteController extends Controller
 
         $note = $board->notes()->create($data);
 
+        broadcast(new NoteCreated($note))->toOthers();
+
         return response()->json($note, 201);
     }
 
@@ -39,13 +44,20 @@ class NoteController extends Controller
 
         $note->update($data);
 
+        broadcast(new NoteUpdated($note))->toOthers();
+
         return response()->json($note);
     }
 
     public function destroy(Note $note): JsonResponse
     {
         $this->authorize('delete', $note);
+
+        [$boardId, $noteId] = [$note->board_id, $note->id];
+
         $note->delete();
+
+        broadcast(new NoteDeleted($boardId, $noteId))->toOthers();
 
         return response()->json(status: 204);
     }

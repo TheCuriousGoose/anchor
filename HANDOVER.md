@@ -69,6 +69,63 @@ the `sidebarBoards` shared prop. Rename and task add/toggle/delete explicitly ca
 changes a board's name or task count, it needs the same call or the sidebar/search will show stale
 data until the next full navigation.
 
+## Real-time collaboration (Laravel Reverb)
+
+Boards sync live between everyone viewing them. `php artisan dev` now runs **four** processes —
+`reverb` was added to the existing server/queue/vite via `DevCommands::artisan('reverb:start')` in
+`AppServiceProvider::boot()`, so no extra terminal is needed. In production Reverb must be run as
+its own long-lived process (`php artisan reverb:start`).
+
+### How it fits together
+
+- **Channels** (`routes/channels.php`):
+  - `presence-boards.{board}` — one per board, gated by the **same `BoardPolicy::view`** the page
+    uses, so viewers get live updates and non-collaborators can't subscribe. The callback's return
+    value *is* the presence roster entry (id/name/avatar/role) that renders the avatar stack.
+  - `private-App.Models.User.{id}` — follows the person, not the board. Sharing changes have to go
+    here because a collaborator can't already be on the channel of a board they were just given
+    (or just lost) access to.
+- **Events** (`app/Events/`): `BoardBroadcastEvent` (abstract, → board presence channel) and
+  `UserBroadcastEvent` (abstract, → one user's private channel) hold the wiring; each concrete
+  event is a few lines defining `broadcastAs()` + `broadcastWith()`. `BoardListChanged` is the odd
+  one out — it returns *many* private channels so one broadcast refreshes every member's sidebar.
+- **Client** (`resources/js/composables/`): `useBoardChannel.ts` subscribes, mutates the same
+  reactive `board` object the page already renders from (which is why remote changes appear with no
+  refetch), and carries the `editing` whispers. `useUserChannel.ts` is mounted once from
+  `AppSidebar.vue` (present on every authenticated page) and handles share/role/revoke.
+
+### Things that will bite you
+
+- **`->toOthers()` depends on `X-Socket-ID`, which we attach by hand.** Echo only adds that header
+  automatically to *axios*; this app uses `fetch`. `lib/boardApi.ts#apiHeaders()` adds it. Any new
+  `fetch` to a broadcasting endpoint must use `apiHeaders()` or the actor will receive their own
+  change back and fight their own optimistic update.
+- **Events are `ShouldBroadcastNow`, deliberately.** `queue:listen` on the `database` driver would
+  add seconds of lag to something whose entire value is immediacy, and a stopped worker would
+  silently break collaboration. Payloads are tiny. If broadcast volume ever becomes a problem,
+  switch to `ShouldBroadcast` **and** a Redis queue — not the database one.
+- **Never put a deleted model in an event.** `SerializesModels` re-fetches on unserialize and
+  throws for a row that's gone, so `TaskDeleted`/`NoteDeleted`/`BoardDeleted` carry scalar ids.
+  `BoardController::destroy` likewise captures `memberIds()` *before* deleting.
+- **`note.deleted` only sends the parent id.** The `notes.parent_id` FK is `cascadeOnDelete`, so
+  the client mirrors that by removing descendants itself (`noteIdsWithDescendants`).
+- **Broadcast payload and HTTP response are deliberately the same object.** `storeTask`/`updateTask`
+  load once, then broadcast and respond from that instance, so a collaborator's copy of a task can't
+  drift from the actor's. `storeTask` also `refresh()`es: a newly created model only holds the
+  attributes that were explicitly set, so without it `completed`/`description`/`due_date` were
+  missing from *both* the response and the broadcast (this was a pre-existing gap in the response).
+- **Testing channel auth needs a non-`null` broadcaster.** `NullBroadcaster::auth()` is a no-op that
+  authorizes everyone, so `BroadcastChannelAuthorizationTest` swaps in the `reverb` driver (signing
+  is local — no server needed) **and re-requires `routes/channels.php`**, because
+  `Broadcast::channel()` binds to whichever driver was default when the file was first loaded.
+
+### Verified
+
+- `php artisan test` 105/105, `phpstan` clean for these files, `vue-tsc`, `npm run build` all pass.
+- Live pipeline exercised against a real `reverb:start` with a websocket client: presence subscribe
+  succeeded and `task.created` / `board.updated` / `task.deleted` arrived with the expected names
+  and payloads. That run is what surfaced the missing-`completed` bug above.
+
 **Wayfinder regen note**: `php artisan wayfinder:generate` alone drops the `.form()` helpers used
 by `Form v-bind="Controller.method.form()"` on the auth/settings pages — always pass `--with-form`
 (the Vite plugin does this automatically at build time; only matters if regenerating by hand).

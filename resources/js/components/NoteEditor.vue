@@ -26,7 +26,7 @@ import { useDebounceFn } from '@vueuse/core';
 import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
-import { csrfToken } from '@/lib/boardApi';
+import { apiHeaders } from '@/lib/boardApi';
 
 const props = defineProps<{
     modelValue: string;
@@ -38,6 +38,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     'update:modelValue': [value: string];
     save: [];
+    focus: [];
+    blur: [];
 }>();
 
 const { t } = useI18n();
@@ -58,10 +60,8 @@ async function uploadImage(file: File): Promise<void> {
     try {
         const response = await fetch(props.imageUploadUrl, {
             method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': csrfToken(),
-            },
+            // No Content-Type: the browser sets the multipart boundary itself.
+            headers: apiHeaders(),
             body: formData,
         });
 
@@ -305,9 +305,13 @@ const editor = useEditor({
     onSelectionUpdate: () => {
         checkSlashTrigger();
     },
+    onFocus: () => {
+        emit('focus');
+    },
     onBlur: () => {
         closeSlashMenu();
         emit('save');
+        emit('blur');
     },
 });
 

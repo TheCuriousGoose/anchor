@@ -65,3 +65,27 @@ export type SidebarBoard = {
     isOwner: boolean;
     role: BoardRole;
 };
+
+/** Someone currently subscribed to a board's presence channel. Shape set by routes/channels.php. */
+export type PresenceMember = {
+    id: number;
+    name: string;
+    avatar: string | null;
+    role: BoardRole;
+};
+
+/** Whoever performed a broadcast mutation, used for "Ada added a task" style messaging. */
+export type Actor = { id: number; name: string } | null;
+
+/**
+ * A thing someone can be editing. Namespaced because task and note ids are both UUIDs and
+ * would otherwise collide in the same lookup.
+ */
+export type EditingTarget = `task:${string}` | `note:${string}`;
+
+/** Payload of the `editing` whisper used for live "X is editing…" hints. */
+export type EditingWhisper = {
+    id: number;
+    name: string;
+    target: EditingTarget | null;
+};

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -26,6 +28,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $name
  * @property string $email
  * @property Carbon|null $email_verified_at
+ * @property UserRole $role
+ * @property CarbonImmutable|null $suspended_at
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -80,6 +84,16 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
             ->withTimestamps();
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -90,6 +104,8 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
+            'suspended_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
         ];
     }

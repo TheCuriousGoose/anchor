@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import { Plus, StickyNote, Trash2 } from '@lucide/vue';
+import { Pencil, Plus, StickyNote, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import NoteEditor from '@/components/NoteEditor.vue';
 import { Button } from '@/components/ui/button';
 import { request } from '@/lib/boardApi';
-import type { Board, Note } from '@/types/board';
+import type { Board, EditingTarget, Note } from '@/types/board';
 
-const props = defineProps<{ board: Board; isAuthenticated: boolean; canEdit: boolean }>();
+const props = defineProps<{
+    board: Board;
+    isAuthenticated: boolean;
+    canEdit: boolean;
+    /** Supplied by the board channel; both no-op for guests. */
+    editingLabelFor: (target: EditingTarget) => string | null;
+    whisperEditing: (target: EditingTarget | null) => void;
+}>();
 const { t } = useI18n();
+
+function noteEditingLabel(note: Note): string | null {
+    return props.editingLabelFor(`note:${note.id}`);
+}
 
 type NoteNode = Note & { depth: number; children: NoteNode[] };
 
@@ -168,6 +179,11 @@ async function deleteNote(note: Note): Promise<void> {
                 >
                     {{ node.title || t('board.untitled') }}
                 </button>
+                <Pencil
+                    v-if="noteEditingLabel(node)"
+                    class="size-3 shrink-0 text-brand"
+                    :title="t('realtime.editing', { name: noteEditingLabel(node) })"
+                />
                 <button
                     v-if="canEdit"
                     type="button"
@@ -190,6 +206,10 @@ async function deleteNote(note: Note): Promise<void> {
         </div>
 
         <div v-if="activeNote" class="min-w-0 flex-1 rounded-md border border-border p-4">
+            <p v-if="noteEditingLabel(activeNote)" class="mb-2 flex items-center gap-1 text-xs font-medium text-brand">
+                <Pencil class="size-3" />
+                {{ t('realtime.editing', { name: noteEditingLabel(activeNote) }) }}
+            </p>
             <input
                 :value="activeNote.title"
                 :readonly="!canEdit"
@@ -198,12 +218,18 @@ async function deleteNote(note: Note): Promise<void> {
                 @input="
                     activeNote.title = ($event.target as HTMLInputElement).value
                 "
-                @blur="saveNote(activeNote)"
+                @focus="whisperEditing(`note:${activeNote.id}`)"
+                @blur="
+                    whisperEditing(null);
+                    saveNote(activeNote);
+                "
             />
             <NoteEditor
                 v-model="activeNote.body"
                 :editable="canEdit"
                 :image-upload-url="isAuthenticated ? `/notes/${activeNote.id}/images` : undefined"
+                @focus="whisperEditing(`note:${activeNote.id}`)"
+                @blur="whisperEditing(null)"
                 @save="saveNote(activeNote)"
             />
         </div>

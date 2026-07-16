@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,6 +11,7 @@ import { useInitials } from '@/composables/useInitials';
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const { getInitials } = useInitials();
+const { t } = useI18n();
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
 const removing = ref(false);
@@ -56,7 +58,11 @@ function removePhoto(): void {
 
 <template>
     <div class="space-y-4">
-        <Heading variant="small" title="Photo" description="Upload a profile photo." />
+        <Heading
+            variant="small"
+            :title="t('settings.photo.title')"
+            :description="t('settings.photo.description')"
+        />
         <div class="flex items-center gap-4">
             <Avatar class="size-16">
                 <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
@@ -64,10 +70,10 @@ function removePhoto(): void {
             </Avatar>
             <div class="flex items-center gap-2">
                 <Button type="button" variant="outline" :disabled="uploading" @click="pickFile">
-                    {{ uploading ? 'Uploading…' : 'Upload photo' }}
+                    {{ uploading ? t('settings.photo.uploading') : t('settings.photo.upload') }}
                 </Button>
                 <Button v-if="user.avatar" type="button" variant="ghost" :disabled="removing" @click="removePhoto">
-                    Remove
+                    {{ t('settings.photo.remove') }}
                 </Button>
             </div>
             <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="handleFileChange" />

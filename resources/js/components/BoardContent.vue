@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import {
     CheckCircle2,
     GripVertical,
@@ -12,15 +12,26 @@ import {
     Tag,
     Trash2,
 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import draggable from 'vuedraggable';
 import LabelManagerDialog from '@/components/LabelManagerDialog.vue';
 import NotesPanel from '@/components/NotesPanel.vue';
+import PresenceAvatars from '@/components/PresenceAvatars.vue';
 import RenameBoardDialog from '@/components/RenameBoardDialog.vue';
 import ShareBoardDialog from '@/components/ShareBoardDialog.vue';
 import TaskDetailDialog from '@/components/TaskDetailDialog.vue';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -40,13 +51,39 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useBoardChannel } from '@/composables/useBoardChannel';
 import { request as apiRequest } from '@/lib/boardApi';
 import { labelColorClasses } from '@/lib/labelColors';
-import type { Board, Label, Priority, Task } from '@/types/board';
+import type { Actor, Board, Label, Priority, Task } from '@/types/board';
 
 const props = defineProps<{ board: Board; isAuthenticated: boolean }>();
 const { board } = props;
 const { t } = useI18n();
+const page = usePage();
+
+const currentUser = computed(() => page.props.auth?.user);
+
+// Real-time collaboration. Guests own a single local board with nobody to sync to, so the
+// channel stays dormant for them.
+const { members, editingLabelFor, whisperEditing } = useBoardChannel(
+    board,
+    props.isAuthenticated,
+    {
+        id: currentUser.value?.id ?? 0,
+        name: currentUser.value?.name ?? '',
+    },
+    {
+        onBoardDeleted: (name: string): void => {
+            toast.info(t('realtime.boardDeletedByOwner', { name }));
+            router.visit('/boards');
+        },
+        onActivity: (actor: Actor, messageKey: string): void => {
+            if (actor) {
+                toast.message(t(messageKey, { name: actor.name }));
+            }
+        },
+    },
+);
 
 const priorityOptions: { value: Priority; label: string }[] = [
     { value: null, label: t('board.priority.none') },
@@ -63,6 +100,7 @@ const contentTab = ref<'tasks' | 'notes'>('tasks');
 const renameOpen = ref(false);
 const shareOpen = ref(false);
 const labelsOpen = ref(false);
+const deleteOpen = ref(false);
 const taskDetailOpen = ref(false);
 const taskDetailTask = ref<Task | null>(null);
 const saving = ref(false);
@@ -176,6 +214,16 @@ function labelDotClass(label: Label): string {
 function openTaskDetail(task: Task): void {
     taskDetailTask.value = task;
     taskDetailOpen.value = true;
+}
+
+// Having the detail dialog open is what "editing a task" means here, so the hint tracks
+// the dialog rather than individual keystrokes.
+watch([taskDetailOpen, taskDetailTask], ([open, task]) => {
+    whisperEditing(open && task ? `task:${task.id}` : null);
+});
+
+function taskEditingLabel(task: Task): string | null {
+    return editingLabelFor(`task:${task.id}`);
 }
 
 function hasLabel(task: Task, label: Label): boolean {
@@ -415,6 +463,7 @@ async function deleteBoard(): Promise<void> {
                 </p>
             </div>
             <div class="flex shrink-0 items-center gap-2">
+                <PresenceAvatars v-if="isAuthenticated" :members="members" :current-user-id="currentUser?.id ?? 0" />
                 <Badge v-if="!board.isOwner" variant="secondary" class="capitalize">{{ board.role }}</Badge>
                 <span v-if="saving" class="hidden text-xs text-muted-foreground sm:inline">{{ t('common.saving') }}</span>
                 <DropdownMenu v-if="isAuthenticated && canEdit">
@@ -433,7 +482,7 @@ async function deleteBoard(): Promise<void> {
                         <DropdownMenuItem v-if="board.isOwner" @click="shareOpen = true">
                             <Share2 class="size-4" /> {{ t('board.shareBoard') }}
                         </DropdownMenuItem>
-                        <DropdownMenuItem v-if="board.isOwner" variant="destructive" @click="deleteBoard">
+                        <DropdownMenuItem v-if="board.isOwner" variant="destructive" @click="deleteOpen = true">
                             <Trash2 class="size-4" /> {{ t('board.deleteBoard') }}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -526,6 +575,12 @@ async function deleteBoard(): Promise<void> {
                                 : 'text-foreground'
                                 " @click="openTaskDetail(task)">{{ task.title }}</button>
 
+                            <span v-if="taskEditingLabel(task)"
+                                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand">
+                                <Pencil class="size-2.5" />
+                                {{ t('realtime.editing', { name: taskEditingLabel(task) }) }}
+                            </span>
+
                             <span v-for="label in task.labels" :key="label.id"
                                 class="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
                                 <span class="size-1.5 rounded-full" :class="labelDotClass(label)" />
@@ -605,13 +660,31 @@ async function deleteBoard(): Promise<void> {
                 </p>
             </div>
 
-            <NotesPanel :board="board" :is-authenticated="isAuthenticated" :can-edit="canEdit" />
+            <NotesPanel :board="board" :is-authenticated="isAuthenticated" :can-edit="canEdit"
+                :editing-label-for="editingLabelFor" :whisper-editing="whisperEditing" />
         </template>
     </div>
 
     <RenameBoardDialog v-if="isAuthenticated" v-model:open="renameOpen" :board="board" />
     <ShareBoardDialog v-if="isAuthenticated" v-model:open="shareOpen" :board="board" />
     <LabelManagerDialog v-model:open="labelsOpen" :board="board" :is-authenticated="isAuthenticated" />
+
+    <!-- Controlled rather than trigger-based: the trigger would live inside the dropdown,
+         which unmounts it on select before the dialog can open. -->
+    <AlertDialog v-model:open="deleteOpen">
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>{{ t('board.deleteConfirmTitle', { name: board.name }) }}</AlertDialogTitle>
+                <AlertDialogDescription>{{ t('board.deleteConfirmBody') }}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>{{ t('common.cancel') }}</AlertDialogCancel>
+                <AlertDialogAction class="bg-destructive text-white hover:bg-destructive/90" @click="deleteBoard">
+                    {{ t('board.deleteBoard') }}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     <TaskDetailDialog v-model:open="taskDetailOpen" :task="taskDetailTask" :board="board"
         :is-authenticated="isAuthenticated" :can-edit="canEdit" />
 </template>
