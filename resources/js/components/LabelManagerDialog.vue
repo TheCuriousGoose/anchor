@@ -86,29 +86,31 @@ async function deleteLabel(label: Label): Promise<void> {
                 }}</DialogDescription>
             </DialogHeader>
 
-            <form class="flex items-center gap-2" @submit.prevent="createLabel">
+            <form class="flex flex-col gap-2" @submit.prevent="createLabel">
                 <Input
                     v-model="newLabelName"
-                    class="flex-1"
+                    class="w-full"
                     maxlength="50"
                     :placeholder="t('labelManager.namePlaceholder')"
                 />
-                <div class="flex items-center gap-1">
-                    <button
-                        v-for="color in labelColors"
-                        :key="color"
-                        type="button"
-                        class="size-5 shrink-0 rounded-full ring-offset-2 ring-offset-background transition-all"
-                        :class="[
-                            labelColorClasses[color],
-                            newLabelColor === color ? 'ring-2 ring-ring' : '',
-                        ]"
-                        @click="newLabelColor = color"
-                    />
+                <div class="flex items-center gap-2">
+                    <div class="flex flex-1 items-center gap-1">
+                        <button
+                            v-for="color in labelColors"
+                            :key="color"
+                            type="button"
+                            class="size-5 shrink-0 rounded-full ring-offset-2 ring-offset-background transition-all"
+                            :class="[
+                                labelColorClasses[color],
+                                newLabelColor === color ? 'ring-2 ring-ring' : '',
+                            ]"
+                            @click="newLabelColor = color"
+                        />
+                    </div>
+                    <Button type="submit" size="sm" :disabled="!newLabelName.trim()">
+                        {{ t('labelManager.add') }}
+                    </Button>
                 </div>
-                <Button type="submit" size="sm" :disabled="!newLabelName.trim()">
-                    {{ t('labelManager.add') }}
-                </Button>
             </form>
 
             <div v-if="board?.labels.length" class="mt-4 flex flex-col gap-2">

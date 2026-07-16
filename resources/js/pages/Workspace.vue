@@ -27,6 +27,7 @@ const defaultGuestBoard: Board = {
         {
             id: 'welcome',
             title: 'Add your first task',
+            description: null,
             completed: false,
             position: 0,
             priority: null,
@@ -36,6 +37,7 @@ const defaultGuestBoard: Board = {
         {
             id: 'focus',
             title: 'Keep today simple',
+            description: null,
             completed: true,
             position: 1,
             priority: null,

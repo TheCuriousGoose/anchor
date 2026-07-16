@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('boards/{board}/tasks/reorder', [BoardController::class, 'reorderTasks'])->name('tasks.reorder');
     Route::patch('tasks/{task}', [BoardController::class, 'updateTask'])->name('tasks.update');
     Route::delete('tasks/{task}', [BoardController::class, 'destroyTask'])->name('tasks.destroy');
+    Route::post('tasks/{task}/images', [BoardController::class, 'storeTaskImage'])->name('tasks.images.store');
 
     Route::post('boards/{board}/share', [BoardShareController::class, 'store'])->name('boards.share.store');
     Route::patch('boards/{board}/share/{user}', [BoardShareController::class, 'update'])->name('boards.share.update');
@@ -30,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('boards/{board}/notes', [NoteController::class, 'store'])->name('notes.store');
     Route::patch('notes/{note}', [NoteController::class, 'update'])->name('notes.update');
     Route::delete('notes/{note}', [NoteController::class, 'destroy'])->name('notes.destroy');
+    Route::post('notes/{note}/images', [NoteController::class, 'storeImage'])->name('notes.images.store');
 
     Route::post('boards/{board}/labels', [LabelController::class, 'store'])->name('labels.store');
     Route::patch('labels/{label}', [LabelController::class, 'update'])->name('labels.update');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreImageRequest;
 use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
 use App\Models\Board;
@@ -47,5 +48,14 @@ class NoteController extends Controller
         $note->delete();
 
         return response()->json(status: 204);
+    }
+
+    public function storeImage(StoreImageRequest $request, Note $note): JsonResponse
+    {
+        $this->authorize('update', $note);
+
+        $media = $note->addMediaFromRequest('image')->toMediaCollection('content-images');
+
+        return response()->json(['url' => $media->getUrl()], 201);
     }
 }

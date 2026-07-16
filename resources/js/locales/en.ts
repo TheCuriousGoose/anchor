@@ -93,6 +93,9 @@ export default {
         noNotesYetSubtitle: 'Jot down anything worth keeping.',
         untitled: 'Untitled',
         deleteNote: 'Delete note',
+        newPage: 'New page',
+        addSubpage: 'Add sub-page',
+        deletePage: 'Delete page',
         toastAddTaskError: 'Could not add the task. Try again.',
         toastUpdateTaskError: 'Could not update the task. Try again.',
         toastPriorityError: 'Could not update priority. Try again.',
@@ -116,6 +119,10 @@ export default {
         empty: 'No labels on this board yet.',
         delete: 'Delete label',
     },
+    taskDetail: {
+        dialogTitle: 'Task details',
+        descriptionPlaceholder: "Add a description, or type '/' for options…",
+    },
     noteEditor: {
         placeholder: "Write something, or type '/' for options…",
         toolbarBold: 'Bold',
@@ -125,6 +132,7 @@ export default {
         toolbarOrderedList: 'Numbered list',
         toolbarChecklist: 'Checklist',
         toolbarQuote: 'Quote',
+        toolbarImage: 'Image',
         toolbarUndo: 'Undo',
         toolbarRedo: 'Redo',
         slashHeading2: 'Heading 2',
@@ -135,7 +143,9 @@ export default {
         slashQuote: 'Quote',
         slashCodeBlock: 'Code block',
         slashDivider: 'Divider',
+        slashImage: 'Image',
         slashNoResults: 'No results',
+        uploadImageError: 'Could not upload image.',
     },
     welcome: {
         appName: 'Anchor',

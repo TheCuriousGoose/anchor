@@ -18,7 +18,7 @@ class HtmlSanitizer
     private const ALLOWED_TAGS = [
         'p', 'br', 'strong', 'b', 'em', 'i', 's', 'strike', 'u',
         'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre',
-        'span', 'div', 'label', 'input', 'hr',
+        'span', 'div', 'label', 'input', 'hr', 'img',
     ];
 
     /** @var array<string, array<int, string>> */
@@ -26,6 +26,7 @@ class HtmlSanitizer
         'ul' => ['data-type'],
         'li' => ['data-type', 'data-checked'],
         'input' => ['type', 'checked', 'disabled'],
+        'img' => ['src', 'alt'],
     ];
 
     private const REMOVE_ENTIRELY = ['script', 'style', 'iframe', 'object', 'embed', 'form'];
@@ -102,6 +103,12 @@ class HtmlSanitizer
                 continue;
             }
 
+            if ($tag === 'img' && ! self::isSafeImageSrc($child->getAttribute('src'))) {
+                $node->removeChild($child);
+
+                continue;
+            }
+
             $allowedAttributes = self::ALLOWED_ATTRIBUTES[$tag] ?? [];
 
             foreach (iterator_to_array($child->attributes ?? []) as $attribute) {
@@ -112,5 +119,20 @@ class HtmlSanitizer
 
             self::sanitizeChildren($child);
         }
+    }
+
+    private static function isSafeImageSrc(string $src): bool
+    {
+        if ($src === '') {
+            return false;
+        }
+
+        if (str_starts_with($src, '/')) {
+            return true;
+        }
+
+        $scheme = strtolower((string) parse_url($src, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https'], true);
     }
 }

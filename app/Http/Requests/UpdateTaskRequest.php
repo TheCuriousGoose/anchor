@@ -15,6 +15,7 @@ class UpdateTaskRequest extends FormRequest
     {
         return [
             'title' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:20000'],
             'completed' => ['sometimes', 'boolean'],
             'priority' => ['sometimes', 'nullable', Rule::enum(TaskPriority::class)],
             'due_date' => ['sometimes', 'nullable', 'date'],

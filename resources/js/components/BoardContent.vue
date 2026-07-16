@@ -10,7 +10,6 @@ import {
     Search,
     Share2,
     Tag,
-    StickyNote,
     Trash2,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
@@ -18,9 +17,10 @@ import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import draggable from 'vuedraggable';
 import LabelManagerDialog from '@/components/LabelManagerDialog.vue';
-import NoteEditor from '@/components/NoteEditor.vue';
+import NotesPanel from '@/components/NotesPanel.vue';
 import RenameBoardDialog from '@/components/RenameBoardDialog.vue';
 import ShareBoardDialog from '@/components/ShareBoardDialog.vue';
+import TaskDetailDialog from '@/components/TaskDetailDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/select';
 import { request as apiRequest } from '@/lib/boardApi';
 import { labelColorClasses } from '@/lib/labelColors';
-import type { Board, Label, Note, Priority, Task } from '@/types/board';
+import type { Board, Label, Priority, Task } from '@/types/board';
 
 const props = defineProps<{ board: Board; isAuthenticated: boolean }>();
 const { board } = props;
@@ -63,6 +63,8 @@ const contentTab = ref<'tasks' | 'notes'>('tasks');
 const renameOpen = ref(false);
 const shareOpen = ref(false);
 const labelsOpen = ref(false);
+const taskDetailOpen = ref(false);
+const taskDetailTask = ref<Task | null>(null);
 const saving = ref(false);
 const lingeringCompletedTaskIds = ref(new Set<string>());
 const completedTaskTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -171,6 +173,11 @@ function labelDotClass(label: Label): string {
     return labelColorClasses[label.color];
 }
 
+function openTaskDetail(task: Task): void {
+    taskDetailTask.value = task;
+    taskDetailOpen.value = true;
+}
+
 function hasLabel(task: Task, label: Label): boolean {
     return task.labels.some((item: Label) => item.id === label.id);
 }
@@ -233,6 +240,7 @@ async function addTask(): Promise<void> {
             board.tasks.push({
                 id: crypto.randomUUID(),
                 title,
+                description: null,
                 completed: false,
                 position: board.tasks.length,
                 priority,
@@ -347,57 +355,6 @@ async function deleteTask(task: Task): Promise<void> {
         refreshSidebarCounts();
     } catch {
         toast.error(t('board.toastDeleteTaskError'));
-    }
-}
-
-async function createNote(): Promise<void> {
-    try {
-        if (props.isAuthenticated) {
-            const note = await request<Note>(
-                `/boards/${board.id}/notes`,
-                'POST',
-                {},
-            );
-            board.notes.unshift(note);
-        } else {
-            const now = new Date().toISOString();
-            board.notes.unshift({
-                id: crypto.randomUUID(),
-                title: '',
-                body: '',
-                created_at: now,
-                updated_at: now,
-            });
-        }
-    } catch {
-        toast.error(t('board.toastCreateNoteError'));
-    }
-}
-
-async function saveNote(note: Note): Promise<void> {
-    if (!props.isAuthenticated) {
-        return;
-    }
-
-    try {
-        await request(`/notes/${note.id}`, 'PATCH', {
-            title: note.title,
-            body: note.body,
-        });
-    } catch {
-        toast.error(t('board.toastSaveNoteError'));
-    }
-}
-
-async function deleteNote(note: Note): Promise<void> {
-    try {
-        if (props.isAuthenticated) {
-            await request(`/notes/${note.id}`, 'DELETE');
-        }
-
-        board.notes = board.notes.filter((item) => item.id !== note.id);
-    } catch {
-        toast.error(t('board.toastDeleteNoteError'));
     }
 }
 
@@ -564,10 +521,10 @@ async function deleteBoard(): Promise<void> {
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <span class="min-w-0 flex-1 text-sm" :class="task.completed
+                            <button type="button" class="min-w-0 flex-1 truncate text-left text-sm hover:underline" :class="task.completed
                                 ? 'text-muted-foreground line-through'
                                 : 'text-foreground'
-                                ">{{ task.title }}</span>
+                                " @click="openTaskDetail(task)">{{ task.title }}</button>
 
                             <span v-for="label in task.labels" :key="label.id"
                                 class="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
@@ -584,14 +541,15 @@ async function deleteBoard(): Promise<void> {
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start" class="w-56">
-                                    <DropdownMenuCheckboxItem v-for="label in board.labels" :key="label.id"
+                                    <DropdownMenuCheckboxItem v-for="label in board.labels" :key="label.id" class="pl-2"
                                         :model-value="hasLabel(task, label)"
                                         @select.prevent
                                         @update:model-value="
                                             (checked) => toggleTaskLabel(task, label, Boolean(checked))
                                             ">
-                                        <span class="mr-2 inline-block size-2.5 rounded-full"
-                                            :class="labelDotClass(label)" />
+                                        <template #indicator-icon><span /></template>
+                                        <span class="mr-2 inline-block size-2.5 shrink-0 rounded-full"
+                                            :class="[labelDotClass(label), hasLabel(task, label) ? 'ring-2 ring-offset-1 ring-ring' : '']" />
                                         {{ label.name }}
                                     </DropdownMenuCheckboxItem>
                                     <p v-if="board.labels.length === 0" class="px-2 py-1.5 text-xs text-muted-foreground">
@@ -641,51 +599,19 @@ async function deleteBoard(): Promise<void> {
         </template>
 
         <template v-else>
-            <div class="mb-5 flex items-center justify-between">
+            <div class="mb-5">
                 <p class="text-sm text-muted-foreground">
                     {{ t('board.notesCount', board.notes.length) }}
                 </p>
-                <Button v-if="canEdit" size="sm" class="bg-brand text-brand-foreground hover:bg-brand/90"
-                    @click="createNote">
-                    <Plus class="size-4" /> {{ t('board.newNote') }}
-                </Button>
             </div>
 
-            <div v-if="board.notes.length === 0"
-                class="flex flex-col items-center rounded-md border border-dashed border-border px-6 py-14 text-center">
-                <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-brand/10 text-brand">
-                    <StickyNote class="size-5" />
-                </div>
-                <p class="text-sm font-medium text-foreground">{{ t('board.noNotesYetTitle') }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                    {{ t('board.noNotesYetSubtitle') }}
-                </p>
-            </div>
-
-            <div v-else class="grid gap-3 sm:grid-cols-2">
-                <div v-for="note in board.notes" :key="note.id"
-                    class="group relative rounded-md border border-border p-4">
-                    <div class="mb-2 flex items-start gap-2">
-                        <input :value="note.title" :readonly="!canEdit" :placeholder="t('board.untitled')"
-                            class="min-w-0 flex-1 bg-transparent text-sm font-semibold text-foreground outline-none placeholder:text-muted-foreground/60"
-                            @input="
-                                note.title = (
-                                    $event.target as HTMLInputElement
-                                ).value
-                                " @blur="saveNote(note)" />
-                        <Button v-if="canEdit" variant="ghost" size="icon"
-                            class="size-7 shrink-0 text-muted-foreground opacity-100 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
-                            :title="t('board.deleteNote')" @click="deleteNote(note)">
-                            <Trash2 class="size-4" />
-                        </Button>
-                    </div>
-                    <NoteEditor v-model="note.body" :editable="canEdit" @save="saveNote(note)" />
-                </div>
-            </div>
+            <NotesPanel :board="board" :is-authenticated="isAuthenticated" :can-edit="canEdit" />
         </template>
     </div>
 
     <RenameBoardDialog v-if="isAuthenticated" v-model:open="renameOpen" :board="board" />
     <ShareBoardDialog v-if="isAuthenticated" v-model:open="shareOpen" :board="board" />
     <LabelManagerDialog v-model:open="labelsOpen" :board="board" :is-authenticated="isAuthenticated" />
+    <TaskDetailDialog v-model:open="taskDetailOpen" :task="taskDetailTask" :board="board"
+        :is-authenticated="isAuthenticated" :can-edit="canEdit" />
 </template>

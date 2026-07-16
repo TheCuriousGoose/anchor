@@ -3,6 +3,7 @@ import {
     Bold,
     Heading2,
     Heading3,
+    Image as ImageIcon,
     Italic,
     List,
     ListChecks,
@@ -15,6 +16,7 @@ import {
     Undo2,
 } from '@lucide/vue';
 import type { Editor } from '@tiptap/core';
+import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
@@ -23,11 +25,14 @@ import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { useDebounceFn } from '@vueuse/core';
 import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toast } from 'vue-sonner';
+import { csrfToken } from '@/lib/boardApi';
 
 const props = defineProps<{
     modelValue: string;
     editable: boolean;
     placeholder?: string;
+    imageUploadUrl?: string;
 }>();
 
 const emit = defineEmits<{
@@ -36,6 +41,50 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const imageInput = ref<HTMLInputElement | null>(null);
+
+function triggerImagePick(): void {
+    imageInput.value?.click();
+}
+
+async function uploadImage(file: File): Promise<void> {
+    if (!props.imageUploadUrl || !editor.value) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await fetch(props.imageUploadUrl, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error(`Upload failed with status ${response.status}`);
+        }
+
+        const { url } = (await response.json()) as { url: string };
+        editor.value.chain().focus().setImage({ src: url }).run();
+        emit('save');
+    } catch {
+        toast.error(t('noteEditor.uploadImageError'));
+    }
+}
+
+function handleImageInputChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    (event.target as HTMLInputElement).value = '';
+
+    if (file) {
+        void uploadImage(file);
+    }
+}
 
 const debouncedSave = useDebounceFn(() => emit('save'), 800);
 
@@ -99,6 +148,16 @@ const slashItems = computed<SlashItem[]>(() => [
         icon: Minus,
         command: (editor) => editor.chain().focus().setHorizontalRule().run(),
     },
+    ...(props.imageUploadUrl
+        ? [
+              {
+                  id: 'image',
+                  label: t('noteEditor.slashImage'),
+                  icon: ImageIcon,
+                  command: () => triggerImagePick(),
+              } satisfies SlashItem,
+          ]
+        : []),
 ]);
 
 const slashOpen = ref(false);
@@ -192,6 +251,7 @@ const editor = useEditor({
         }),
         TaskList,
         TaskItem.configure({ nested: true }),
+        Image,
     ],
     editorProps: {
         attributes: {
@@ -308,6 +368,16 @@ const toolbarActions = computed(() => [
         isActive: () => editor.value?.isActive('blockquote'),
         run: () => editor.value?.chain().focus().toggleBlockquote().run(),
     },
+    ...(props.imageUploadUrl
+        ? [
+              {
+                  label: t('noteEditor.toolbarImage'),
+                  icon: ImageIcon,
+                  isActive: () => false,
+                  run: () => triggerImagePick(),
+              },
+          ]
+        : []),
 ]);
 </script>
 
@@ -356,6 +426,15 @@ const toolbarActions = computed(() => [
             </button>
         </div>
         <EditorContent :editor="editor" />
+
+        <input
+            v-if="imageUploadUrl"
+            ref="imageInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            class="hidden"
+            @change="handleImageInputChange"
+        />
 
         <div
             v-if="slashOpen && filteredSlashItems.length > 0"
@@ -431,6 +510,16 @@ const toolbarActions = computed(() => [
     font-family: ui-monospace, monospace;
     font-size: 0.8rem;
     overflow-x: auto;
+}
+
+.note-editor-content {
+    min-height: 12rem;
+}
+
+.note-editor-content img {
+    max-width: 100%;
+    border-radius: 0.375rem;
+    margin: 0.5rem 0;
 }
 
 .note-editor-content hr {

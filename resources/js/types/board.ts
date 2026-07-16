@@ -21,6 +21,7 @@ export type Label = {
 export type Task = {
     id: string;
     title: string;
+    description: string | null;
     completed: boolean;
     position: number;
     priority: Priority;
@@ -30,6 +31,7 @@ export type Task = {
 
 export type Note = {
     id: string;
+    parent_id: string | null;
     title: string;
     body: string;
     created_at: string;

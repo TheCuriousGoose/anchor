@@ -10,11 +10,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property string $id
  * @property string $board_id
  * @property string $title
+ * @property string|null $description
  * @property bool $completed
  * @property int $position
  * @property TaskPriority|null $priority
@@ -22,10 +25,16 @@ use Illuminate\Support\Carbon;
  * @property-read Board $board
  * @property-read Collection<int, Label> $labels
  */
-#[Fillable(['title', 'completed', 'position', 'priority', 'due_date'])]
-class Task extends Model
+#[Fillable(['title', 'description', 'completed', 'position', 'priority', 'due_date'])]
+class Task extends Model implements HasMedia
 {
-    use HasUuids;
+    use HasUuids, InteractsWithMedia;
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('content-images')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+    }
 
     protected function casts(): array
     {

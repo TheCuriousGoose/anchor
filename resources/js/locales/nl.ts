@@ -93,6 +93,9 @@ export default {
         noNotesYetSubtitle: 'Schrijf op wat het bewaren waard is.',
         untitled: 'Naamloos',
         deleteNote: 'Notitie verwijderen',
+        newPage: 'Nieuwe pagina',
+        addSubpage: 'Subpagina toevoegen',
+        deletePage: 'Pagina verwijderen',
         toastAddTaskError: 'Kon de taak niet toevoegen. Probeer het opnieuw.',
         toastUpdateTaskError:
             'Kon de taak niet bijwerken. Probeer het opnieuw.',
@@ -128,6 +131,10 @@ export default {
         empty: 'Nog geen labels op dit board.',
         delete: 'Label verwijderen',
     },
+    taskDetail: {
+        dialogTitle: 'Taakdetails',
+        descriptionPlaceholder: "Voeg een beschrijving toe, of typ '/' voor opties…",
+    },
     noteEditor: {
         placeholder: "Schrijf iets, of typ '/' voor opties…",
         toolbarBold: 'Vet',
@@ -137,6 +144,7 @@ export default {
         toolbarOrderedList: 'Genummerde lijst',
         toolbarChecklist: 'Checklist',
         toolbarQuote: 'Citaat',
+        toolbarImage: 'Afbeelding',
         toolbarUndo: 'Ongedaan maken',
         toolbarRedo: 'Opnieuw',
         slashHeading2: 'Kop 2',
@@ -147,7 +155,9 @@ export default {
         slashQuote: 'Citaat',
         slashCodeBlock: 'Codeblok',
         slashDivider: 'Scheidingslijn',
+        slashImage: 'Afbeelding',
         slashNoResults: 'Geen resultaten',
+        uploadImageError: 'Afbeelding uploaden is mislukt.',
     },
     welcome: {
         appName: 'Anchor',

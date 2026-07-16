@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ImportBoardRequest;
 use App\Http\Requests\ReorderTasksRequest;
 use App\Http\Requests\StoreBoardRequest;
+use App\Http\Requests\StoreImageRequest;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateBoardRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\BoardResource;
 use App\Models\Board;
 use App\Models\Task;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -105,6 +107,10 @@ class BoardController extends Controller
 
         $data = $request->validated();
 
+        if (array_key_exists('description', $data)) {
+            $data['description'] = $data['description'] === null ? null : HtmlSanitizer::clean($data['description']);
+        }
+
         $task->update(collect($data)->except('label_ids')->all());
 
         if (array_key_exists('label_ids', $data)) {
@@ -120,6 +126,15 @@ class BoardController extends Controller
         $task->delete();
 
         return response()->json(status: 204);
+    }
+
+    public function storeTaskImage(StoreImageRequest $request, Task $task): JsonResponse
+    {
+        $this->authorize('update', $task);
+
+        $media = $task->addMediaFromRequest('image')->toMediaCollection('content-images');
+
+        return response()->json(['url' => $media->getUrl()], 201);
     }
 
     public function reorderTasks(ReorderTasksRequest $request, Board $board): JsonResponse
