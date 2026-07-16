@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Tag } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import NoteEditor from '@/components/NoteEditor.vue';
@@ -28,6 +28,7 @@ const props = defineProps<{
     isAuthenticated: boolean;
     canEdit: boolean;
 }>();
+const task = toRef(props, 'task');
 const open = defineModel<boolean>('open', { default: false });
 const { t } = useI18n();
 
@@ -179,10 +180,10 @@ async function saveDescription(task: Task): Promise<void> {
 }
 
 const description = computed<string>({
-    get: () => props.task?.description ?? '',
+    get: () => task.value?.description ?? '',
     set: (value) => {
-        if (props.task) {
-            props.task.description = value;
+        if (task.value) {
+            task.value.description = value;
         }
     },
 });

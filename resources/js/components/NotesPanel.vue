@@ -16,6 +16,7 @@ const props = defineProps<{
     editingLabelFor: (target: EditingTarget) => string | null;
     whisperEditing: (target: EditingTarget | null) => void;
 }>();
+const { board } = props;
 const { t } = useI18n();
 
 function noteEditingLabel(note: Note): string | null {
@@ -88,7 +89,7 @@ async function createPage(parentId: string | null): Promise<void> {
             };
         }
 
-        props.board.notes.unshift(note);
+        board.notes.unshift(note);
         activeNoteId.value = note.id;
     } catch {
         toast.error(t('board.toastCreateNoteError'));
@@ -135,7 +136,7 @@ async function deleteNote(note: Note): Promise<void> {
         }
 
         const idsToRemove = collectWithDescendants(note.id);
-        props.board.notes = props.board.notes.filter(
+        board.notes = board.notes.filter(
             (item) => !idsToRemove.has(item.id),
         );
 
