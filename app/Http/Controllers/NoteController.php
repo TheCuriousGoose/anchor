@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateNoteRequest;
 use App\Models\Board;
 use App\Models\Note;
 use App\Support\HtmlSanitizer;
+use App\Support\MediaUrl;
 use Illuminate\Http\JsonResponse;
 
 class NoteController extends Controller
@@ -68,6 +69,6 @@ class NoteController extends Controller
 
         $media = $note->addMediaFromRequest('image')->toMediaCollection('content-images');
 
-        return response()->json(['url' => $media->getUrl()], 201);
+        return response()->json(['url' => MediaUrl::for($media)], 201);
     }
 }
