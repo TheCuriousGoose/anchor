@@ -22,6 +22,7 @@ use App\Models\AuditLog;
 use App\Models\Board;
 use App\Models\Task;
 use App\Support\HtmlSanitizer;
+use App\Support\MediaUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -177,7 +178,7 @@ class BoardController extends Controller
 
         $media = $task->addMediaFromRequest('image')->toMediaCollection('content-images');
 
-        return response()->json(['url' => $media->getUrl()], 201);
+        return response()->json(['url' => MediaUrl::for($media)], 201);
     }
 
     public function reorderTasks(ReorderTasksRequest $request, Board $board): JsonResponse

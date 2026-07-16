@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\NotificationType;
 use App\Enums\UserRole;
+use App\Support\MediaUrl;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
@@ -66,7 +67,13 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
 
     public function getAvatarAttribute(): ?string
     {
-        $url = $this->getFirstMediaUrl('avatar', 'avatar');
+        $media = $this->getFirstMedia('avatar');
+
+        if (! $media) {
+            return null;
+        }
+
+        $url = MediaUrl::for($media, 'avatar');
 
         return $url === '' ? null : $url;
     }
