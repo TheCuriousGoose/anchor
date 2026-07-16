@@ -25,6 +25,12 @@ class BoardAccessRevoked extends Notification implements ShouldQueue
         return $notifiable->wantsNotification(NotificationType::BoardAccessRevoked) ? ['mail'] : [];
     }
 
+    /** @return array<string, string> */
+    public function viaQueues(): array
+    {
+        return ['mail' => 'mail'];
+    }
+
     public function toMail(User $notifiable): MailMessage
     {
         // Deliberately no action button — there is nothing left for them to open.

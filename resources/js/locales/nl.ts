@@ -1,4 +1,7 @@
 export default {
+    brand: {
+        tagline: 'Ruimte om te denken',
+    },
     common: {
         cancel: 'Annuleren',
         save: 'Opslaan',
@@ -39,7 +42,8 @@ export default {
             you: 'Jij',
             empty: 'Geen gebruikers gevonden.',
             deleteTitle: '{name} verwijderen?',
-            deleteDescription: 'Dit verwijdert het account definitief en kan niet ongedaan worden gemaakt.',
+            deleteDescription:
+                'Dit verwijdert het account definitief en kan niet ongedaan worden gemaakt.',
             deleteBoardsWarning:
                 'Hiermee worden ook {count} board(s) van deze gebruiker definitief verwijderd, inclusief boards die met anderen zijn gedeeld.',
             deleteConfirm: 'Account verwijderen',
@@ -60,7 +64,8 @@ export default {
         },
         boardDetail: {
             ownedBy: 'Eigendom van {name} ({email})',
-            readOnlyNotice: 'Alleen-lezen weergave. Het openen van dit board wordt vastgelegd in het auditlog.',
+            readOnlyNotice:
+                'Alleen-lezen weergave. Het openen van dit board wordt vastgelegd in het auditlog.',
             tasks: 'Taken ({count})',
             notes: 'Notities ({count})',
             collaborators: 'Deelnemers ({count})',
@@ -119,15 +124,18 @@ export default {
             types: {
                 board_shared: {
                     label: 'Een board wordt met mij gedeeld',
-                    description: 'Wanneer iemand je toegang geeft tot een van zijn boards.',
+                    description:
+                        'Wanneer iemand je toegang geeft tot een van zijn boards.',
                 },
                 board_role_changed: {
                     label: 'Mijn rol wijzigt',
-                    description: 'Wanneer je toegang op een gedeeld board verandert tussen bewerker en kijker.',
+                    description:
+                        'Wanneer je toegang op een gedeeld board verandert tussen bewerker en kijker.',
                 },
                 board_access_revoked: {
                     label: 'Mijn toegang wordt ingetrokken',
-                    description: 'Wanneer iemand je toegang tot een gedeeld board intrekt.',
+                    description:
+                        'Wanneer iemand je toegang tot een gedeeld board intrekt.',
                 },
             },
         },
@@ -142,7 +150,8 @@ export default {
             save: 'Opslaan',
             unverified: 'Je e-mailadres is niet geverifieerd.',
             resend: 'Klik hier om de verificatiemail opnieuw te versturen.',
-            verificationSent: 'Er is een nieuwe verificatielink naar je e-mailadres gestuurd.',
+            verificationSent:
+                'Er is een nieuwe verificatielink naar je e-mailadres gestuurd.',
         },
         photo: {
             title: 'Foto',
@@ -159,13 +168,15 @@ export default {
             dark: 'Donker',
             system: 'Systeem',
             languageTitle: 'Taal',
-            languageDescription: 'Kies de taal die in de hele app wordt gebruikt',
+            languageDescription:
+                'Kies de taal die in de hele app wordt gebruikt',
             languageLabel: 'Taal',
         },
         security: {
             headTitle: 'Beveiligingsinstellingen',
             title: 'Wachtwoord wijzigen',
-            description: 'Gebruik een lang, willekeurig wachtwoord om je account veilig te houden',
+            description:
+                'Gebruik een lang, willekeurig wachtwoord om je account veilig te houden',
             currentPassword: 'Huidig wachtwoord',
             newPassword: 'Nieuw wachtwoord',
             confirmPassword: 'Bevestig wachtwoord',
@@ -175,7 +186,8 @@ export default {
             title: 'Account verwijderen',
             description: 'Verwijder je account en alle bijbehorende gegevens',
             warning: 'Let op',
-            warningBody: 'Ga voorzichtig te werk, dit kan niet ongedaan worden gemaakt.',
+            warningBody:
+                'Ga voorzichtig te werk, dit kan niet ongedaan worden gemaakt.',
             button: 'Account verwijderen',
             dialogTitle: 'Weet je zeker dat je je account wilt verwijderen?',
             dialogDescription:
@@ -198,7 +210,8 @@ export default {
                 enabledDescription:
                     'Tweestapsverificatie is nu ingeschakeld. Scan de QR-code of voer de installatiesleutel in je authenticator-app in.',
                 verifyTitle: 'Verificatiecode controleren',
-                verifyDescription: 'Voer de 6-cijferige code uit je authenticator-app in',
+                verifyDescription:
+                    'Voer de 6-cijferige code uit je authenticator-app in',
                 setupTitle: 'Tweestapsverificatie inschakelen',
                 setupDescription:
                     'Scan de QR-code of voer de installatiesleutel in je authenticator-app in om tweestapsverificatie af te ronden',
@@ -270,11 +283,13 @@ export default {
     },
     shareBoard: {
         title: 'Deel "{name}"',
-        description: 'Nodig mensen uit om dit board te bekijken of te bewerken.',
-        emailPlaceholder: 'persoon@voorbeeld.nl',
+        description:
+            'Nodig mensen uit om dit board te bekijken of te bewerken.',
+        emailPlaceholder: "persoon{'@'}voorbeeld.nl",
         invite: 'Uitnodigen',
         editor: 'Bewerker',
         viewer: 'Kijker',
+        members: 'Mensen met toegang',
         removeAccess: 'Toegang intrekken',
         noOneYet: 'Nog niemand anders heeft toegang.',
         pending: 'Uitgenodigd',
@@ -312,11 +327,15 @@ export default {
         emptyTryAnotherSearch: 'Probeer een andere zoekopdracht.',
         emptyAddTaskAbove: 'Voeg hierboven een taak toe.',
         deleteTask: 'Taak verwijderen',
+        deleteTaskConfirmTitle: '"{name}" verwijderen?',
+        deleteTaskConfirmBody:
+            'Dit verwijdert de taak definitief. Dit kan niet ongedaan worden gemaakt.',
         labelsButton: 'Labels',
         noLabelsYet: 'Nog geen labels',
         newLabelPlaceholder: 'Nieuw label',
         addLabel: 'Toevoegen',
         dueDate: 'Deadline',
+        clearDueDate: 'Deadline wissen',
         overdue: 'Te laat',
         notesCount: '0 notities | 1 notitie | {count} notities',
         newNote: 'Nieuwe notitie',
@@ -336,8 +355,7 @@ export default {
             'Kon de taak niet verwijderen. Probeer het opnieuw.',
         toastCreateNoteError:
             'Kon de notitie niet aanmaken. Probeer het opnieuw.',
-        toastSaveNoteError:
-            'Kon de notitie niet opslaan. Probeer het opnieuw.',
+        toastSaveNoteError: 'Kon de notitie niet opslaan. Probeer het opnieuw.',
         toastDeleteNoteError:
             'Kon de notitie niet verwijderen. Probeer het opnieuw.',
         toastReorderError:
@@ -364,7 +382,8 @@ export default {
     },
     taskDetail: {
         dialogTitle: 'Taakdetails',
-        descriptionPlaceholder: "Voeg een beschrijving toe, of typ '/' voor opties…",
+        descriptionPlaceholder:
+            "Voeg een beschrijving toe, of typ '/' voor opties…",
     },
     noteEditor: {
         placeholder: "Schrijf iets, of typ '/' voor opties…",
@@ -410,6 +429,81 @@ export default {
         roleChangedTo: {
             editor: 'Je kunt dit board nu bewerken',
             viewer: 'Je toegang tot dit board is nu alleen-lezen',
+        },
+    },
+    public: {
+        github: 'GitHub',
+        navigation: {
+            about: 'Over',
+            privacy: 'Privacy',
+            signIn: 'Inloggen',
+            openWorkspace: 'Workspace openen',
+        },
+        footer: {
+            copyright: '© {year} AnchorNotes. Gemaakt voor rustiger werken.',
+        },
+        about: {
+            pageTitle: 'Over',
+            eyebrow: 'Over',
+            introduction:
+                'AnchorNotes is een gedeelde werkplek voor boards, taken en notities. Zo blijft de volgende stap dicht bij het gesprek eromheen.',
+            context: {
+                title: 'Houd werk in context',
+                description:
+                    'Maak boards voor projecten, voeg taken toe wanneer ze ontstaan en bewaar nuttige notities bij het werk.',
+            },
+            sharing: {
+                title: 'Deel alleen wat nodig is',
+                description:
+                    'Nodig mensen uit voor afzonderlijke boards, zodat projectwerk los blijft van de rest.',
+            },
+            simple: {
+                title: 'Standaard eenvoudig',
+                description:
+                    'Het doel is een praktische plek om werk te organiseren, zonder van elk project een proces te maken.',
+            },
+            openSourcePrefix:
+                'AnchorNotes is open source. Bekijk het project op',
+            contactPrefix: 'Vragen of feedback:',
+            openApp: 'AnchorNotes openen',
+        },
+        privacy: {
+            pageTitle: 'Privacy',
+            eyebrow: 'Privacy',
+            heading: 'Privacyverklaring',
+            lastUpdated: 'Laatst bijgewerkt op 16 juli 2026',
+            scope: {
+                title: 'Waar deze pagina over gaat',
+                description:
+                    'Deze privacyverklaring legt in duidelijke taal uit hoe informatie in AnchorNotes wordt gebruikt om de dienst te leveren. Het is een informatieve samenvatting en moet worden gelezen naast eventuele privacyvereisten die voor jouw workspace gelden.',
+            },
+            workspaceData: {
+                title: 'Informatie in je workspace',
+                description:
+                    'AnchorNotes bewaart de accountgegevens, boards, taken, notities, bijlagen en samenwerkingsinformatie die jij of je medewerkers toevoegen. Deze informatie wordt gebruikt om gebruikers aan te melden, de juiste workspace-inhoud te tonen en functies zoals delen en uitnodigingen mogelijk te maken.',
+            },
+            access: {
+                title: 'Hoe toegang werkt',
+                description:
+                    'De inhoud van een workspace is beschikbaar voor de accounteigenaar en voor mensen die toegang tot een board hebben gekregen. Kies medewerkers zorgvuldig en verwijder toegang wanneer die niet meer nodig is. De beveiliging van je account hangt ook af van een sterk, uniek wachtwoord en het beschermen van je inlogmethoden.',
+            },
+            retention: {
+                title: 'Bewaren en verwijderen',
+                description:
+                    'Informatie blijft in AnchorNotes zolang die nodig is voor de workspace of totdat deze via de applicatie wordt verwijderd. Het verwijderen van een board, notitie, taak of account kan invloed hebben op gerelateerde workspace-inhoud. Neem voor hulp bij inzage of verwijdering van gegevens contact op met de beheerder van jouw AnchorNotes-installatie.',
+            },
+            changes: {
+                title: 'Wijzigingen in deze verklaring',
+                description:
+                    'Deze pagina kan veranderen wanneer AnchorNotes verder wordt ontwikkeld. De datum bovenaan geeft aan wanneer de pagina voor het laatst is bijgewerkt. Als je de dienst na een wijziging blijft gebruiken, raden we aan de aangepaste informatie te bekijken.',
+            },
+            help: {
+                title: 'Hulp nodig?',
+                contactPrefix:
+                    'Heb je vragen over privacy of jouw gegevens? Mail dan naar',
+                sourcePrefix:
+                    'AnchorNotes is open source. De broncode staat op',
+            },
         },
     },
 };

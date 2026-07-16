@@ -26,6 +26,12 @@ class BoardInvitationSent extends Notification implements ShouldQueue
         return ['mail'];
     }
 
+    /** @return array<string, string> */
+    public function viaQueues(): array
+    {
+        return ['mail' => 'mail'];
+    }
+
     public function toMail(AnonymousNotifiable $notifiable): MailMessage
     {
         $invitation = $this->invitation->loadMissing(['board', 'inviter']);
