@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { X } from '@lucide/vue';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,7 @@ import { request } from '@/lib/boardApi';
 import type { Board, Collaborator, CollaboratorRole } from '@/types/board';
 
 const props = defineProps<{ board: Board | null }>();
+const { t } = useI18n();
 const open = defineModel<boolean>('open', { default: false });
 const email = ref('');
 const role = ref<CollaboratorRole>('editor');
@@ -51,9 +53,7 @@ async function invite(): Promise<void> {
         ];
         email.value = '';
     } catch {
-        toast.error(
-            'Could not share the board. Check the email and try again.',
-        );
+        toast.error(t('shareBoard.inviteError'));
     }
 }
 
@@ -76,7 +76,7 @@ async function updateRole(
         });
     } catch {
         collaborator.role = previous;
-        toast.error('Could not update access. Try again.');
+        toast.error(t('shareBoard.roleError'));
     }
 }
 
@@ -93,7 +93,7 @@ async function removeCollaborator(collaborator: Collaborator): Promise<void> {
             (item) => item.id !== collaborator.id,
         );
     } catch {
-        toast.error('Could not remove access. Try again.');
+        toast.error(t('shareBoard.removeError'));
     }
 }
 </script>
@@ -102,11 +102,8 @@ async function removeCollaborator(collaborator: Collaborator): Promise<void> {
     <Dialog v-model:open="open">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
-                <DialogTitle>Share “{{ board?.name }}”</DialogTitle>
-                <DialogDescription
-                    >Invite people to view or edit this
-                    board.</DialogDescription
-                >
+                <DialogTitle>{{ t('shareBoard.title', { name: board?.name }) }}</DialogTitle>
+                <DialogDescription>{{ t('shareBoard.description') }}</DialogDescription>
             </DialogHeader>
 
             <form class="flex items-center gap-2" @submit.prevent="invite">
@@ -114,19 +111,19 @@ async function removeCollaborator(collaborator: Collaborator): Promise<void> {
                     v-model="email"
                     type="email"
                     class="flex-1"
-                    placeholder="person@example.com"
+                    :placeholder="t('shareBoard.emailPlaceholder')"
                 />
                 <Select v-model="role">
                     <SelectTrigger class="w-28">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="editor">Editor</SelectItem>
-                        <SelectItem value="viewer">Viewer</SelectItem>
+                        <SelectItem value="editor">{{ t('shareBoard.editor') }}</SelectItem>
+                        <SelectItem value="viewer">{{ t('shareBoard.viewer') }}</SelectItem>
                     </SelectContent>
                 </Select>
                 <Button type="submit" size="sm" :disabled="!email.trim()"
-                    >Invite</Button
+                    >{{ t('shareBoard.invite') }}</Button
                 >
             </form>
 
@@ -161,15 +158,15 @@ async function removeCollaborator(collaborator: Collaborator): Promise<void> {
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="editor">Editor</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
+                            <SelectItem value="editor">{{ t('shareBoard.editor') }}</SelectItem>
+                            <SelectItem value="viewer">{{ t('shareBoard.viewer') }}</SelectItem>
                         </SelectContent>
                     </Select>
                     <Button
                         variant="ghost"
                         size="icon"
                         class="size-8 text-muted-foreground hover:text-destructive"
-                        title="Remove access"
+                        :title="t('shareBoard.removeAccess')"
                         @click="removeCollaborator(collaborator)"
                     >
                         <X class="size-4" />
@@ -177,7 +174,7 @@ async function removeCollaborator(collaborator: Collaborator): Promise<void> {
                 </div>
             </div>
             <p v-else class="mt-4 text-xs text-muted-foreground">
-                No one else has access yet.
+                {{ t('shareBoard.noOneYet') }}
             </p>
         </DialogContent>
     </Dialog>

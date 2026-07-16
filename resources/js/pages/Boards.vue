@@ -10,6 +10,7 @@ import {
     Trash2,
 } from '@lucide/vue';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import BoardIcon from '@/components/BoardIcon.vue';
 import CreateBoardDialog from '@/components/CreateBoardDialog.vue';
@@ -36,6 +37,7 @@ import type { BreadcrumbItem } from '@/types';
 import type { Board } from '@/types/board';
 
 const props = defineProps<{ boards: Board[] }>();
+const { t } = useI18n();
 
 defineOptions({
     layout: {
@@ -85,7 +87,7 @@ async function confirmDelete(): Promise<void> {
         deleteTarget.value = null;
         router.reload({ only: ['sidebarBoards'] });
     } catch {
-        toast.error('Could not delete the board. Try again.');
+        toast.error(t('boardsIndex.deleteError'));
     }
 }
 </script>
@@ -98,14 +100,14 @@ async function confirmDelete(): Promise<void> {
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-xl font-semibold tracking-tight text-foreground">
-                    Boards
+                    {{ t('boardsIndex.title') }}
                 </h1>
                 <p class="text-sm text-muted-foreground">
-                    Boards you own or have been given access to.
+                    {{ t('boardsIndex.subtitle') }}
                 </p>
             </div>
             <Button class="bg-brand text-brand-foreground hover:bg-brand/90" @click="createOpen = true">
-                <Plus class="size-4" /> New board
+                <Plus class="size-4" /> {{ t('boardsIndex.newBoard') }}
             </Button>
         </div>
 
@@ -114,9 +116,9 @@ async function confirmDelete(): Promise<void> {
             <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-brand/10 text-brand">
                 <LayoutGrid class="size-5" />
             </div>
-            <p class="text-sm font-medium text-foreground">No boards yet</p>
+            <p class="text-sm font-medium text-foreground">{{ t('boardsIndex.emptyTitle') }}</p>
             <p class="mt-1 text-xs text-muted-foreground">
-                Create your first board to start tracking tasks and notes.
+                {{ t('boardsIndex.emptySubtitle') }}
             </p>
         </div>
 
@@ -135,20 +137,20 @@ async function confirmDelete(): Promise<void> {
                             <DropdownMenuTrigger as-child>
                                 <Button variant="ghost" size="icon"
                                     class="size-8 text-muted-foreground opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                                    title="Board options">
+                                    :title="t('boardsIndex.boardOptions')">
                                     <MoreHorizontal class="size-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem v-if="canEdit(board)" @click="openRename(board)">
-                                    <Pencil class="size-4" /> Rename
+                                    <Pencil class="size-4" /> {{ t('boardsIndex.rename') }}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem v-if="board.isOwner" @click="openShare(board)">
-                                    <Share2 class="size-4" /> Share
+                                    <Share2 class="size-4" /> {{ t('boardsIndex.share') }}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem v-if="board.isOwner" variant="destructive"
                                     @click="deleteTarget = board">
-                                    <Trash2 class="size-4" /> Delete
+                                    <Trash2 class="size-4" /> {{ t('boardsIndex.delete') }}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -160,7 +162,7 @@ async function confirmDelete(): Promise<void> {
                         {{ board.name }}
                     </h3>
                     <div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{{ openCount(board) }} open</span>
+                        <span>{{ t('boardsIndex.open', { count: openCount(board) }) }}</span>
                         <span>·</span>
                         <span class="inline-flex items-center gap-1">
                             <StickyNote class="size-3" />{{
@@ -186,13 +188,12 @@ async function confirmDelete(): Promise<void> {
     ">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
-                <DialogTitle>Delete “{{ deleteTarget?.name }}”?</DialogTitle>
-                <DialogDescription>This permanently deletes the board and all of its tasks and
-                    notes. This cannot be undone.</DialogDescription>
+                <DialogTitle>{{ t('boardsIndex.deleteConfirmTitle', { name: deleteTarget?.name }) }}</DialogTitle>
+                <DialogDescription>{{ t('boardsIndex.deleteConfirmBody') }}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
-                <Button type="button" variant="outline" @click="deleteTarget = null">Cancel</Button>
-                <Button type="button" variant="destructive" @click="confirmDelete">Delete board</Button>
+                <Button type="button" variant="outline" @click="deleteTarget = null">{{ t('common.cancel') }}</Button>
+                <Button type="button" variant="destructive" @click="confirmDelete">{{ t('boardsIndex.deleteBoard') }}</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

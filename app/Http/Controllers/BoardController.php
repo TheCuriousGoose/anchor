@@ -41,7 +41,7 @@ class BoardController extends Controller
             return $board;
         });
 
-        return response()->json((new BoardResource($board->load(['tasks', 'notes', 'collaborators'])))->resolve(), 201);
+        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels'])))->resolve(), 201);
     }
 
     public function store(StoreBoardRequest $request): JsonResponse
@@ -53,7 +53,7 @@ class BoardController extends Controller
             'icon' => $data['icon'] ?? '✓',
         ]);
 
-        return response()->json((new BoardResource($board->load(['tasks', 'notes', 'collaborators'])))->resolve(), 201);
+        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels'])))->resolve(), 201);
     }
 
     public function update(UpdateBoardRequest $request, Board $board): JsonResponse
@@ -62,7 +62,7 @@ class BoardController extends Controller
 
         $board->update($request->validated());
 
-        return response()->json((new BoardResource($board->load(['tasks', 'notes', 'collaborators'])))->resolve());
+        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels'])))->resolve());
     }
 
     public function destroy(Request $request, Board $board): JsonResponse
@@ -82,23 +82,36 @@ class BoardController extends Controller
         $task = DB::transaction(function () use ($board, $data): Task {
             $position = $board->tasks()->lockForUpdate()->max('position');
 
-            return $board->tasks()->create([
+            $task = $board->tasks()->create([
                 'title' => $data['title'],
                 'priority' => $data['priority'] ?? null,
+                'due_date' => $data['due_date'] ?? null,
                 'position' => ($position ?? -1) + 1,
             ]);
+
+            if (! empty($data['label_ids'])) {
+                $task->labels()->sync($board->labels()->whereIn('id', $data['label_ids'])->pluck('id'));
+            }
+
+            return $task;
         });
 
-        return response()->json($task, 201);
+        return response()->json($task->load('labels'), 201);
     }
 
     public function updateTask(UpdateTaskRequest $request, Task $task): JsonResponse
     {
         $this->authorize('update', $task);
 
-        $task->update($request->validated());
+        $data = $request->validated();
 
-        return response()->json($task);
+        $task->update(collect($data)->except('label_ids')->all());
+
+        if (array_key_exists('label_ids', $data)) {
+            $task->labels()->sync($task->board->labels()->whereIn('id', $data['label_ids'])->pluck('id'));
+        }
+
+        return response()->json($task->load('labels'));
     }
 
     public function destroyTask(Request $request, Task $task): JsonResponse

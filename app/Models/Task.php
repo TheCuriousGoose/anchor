@@ -4,9 +4,12 @@ namespace App\Models;
 
 use App\Enums\TaskPriority;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
@@ -15,9 +18,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $completed
  * @property int $position
  * @property TaskPriority|null $priority
+ * @property Carbon|null $due_date
  * @property-read Board $board
+ * @property-read Collection<int, Label> $labels
  */
-#[Fillable(['title', 'completed', 'position', 'priority'])]
+#[Fillable(['title', 'completed', 'position', 'priority', 'due_date'])]
 class Task extends Model
 {
     use HasUuids;
@@ -27,6 +32,7 @@ class Task extends Model
         return [
             'completed' => 'boolean',
             'priority' => TaskPriority::class,
+            'due_date' => 'datetime',
         ];
     }
 
@@ -34,5 +40,11 @@ class Task extends Model
     public function board(): BelongsTo
     {
         return $this->belongsTo(Board::class);
+    }
+
+    /** @return BelongsToMany<Label, $this> */
+    public function labels(): BelongsToMany
+    {
+        return $this->belongsToMany(Label::class);
     }
 }

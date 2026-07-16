@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { LogOut, Settings } from '@lucide/vue';
+import { useI18n } from 'vue-i18n';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -16,6 +18,8 @@ type Props = {
     user: User;
 };
 
+const { t } = useI18n();
+
 const handleLogout = () => {
     router.flushAll();
 };
@@ -30,11 +34,18 @@ defineProps<Props>();
         </div>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
+    <div class="flex items-center justify-between px-2 py-1.5">
+        <span class="text-xs text-muted-foreground">{{
+            t('userMenu.language')
+        }}</span>
+        <LanguageSwitcher @click.stop />
+    </div>
+    <DropdownMenuSeparator />
     <DropdownMenuGroup>
         <DropdownMenuItem :as-child="true">
             <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
-                Settings
+                {{ t('userMenu.settings') }}
             </Link>
         </DropdownMenuItem>
     </DropdownMenuGroup>
@@ -48,7 +59,7 @@ defineProps<Props>();
             data-test="logout-button"
         >
             <LogOut class="mr-2 h-4 w-4" />
-            Log out
+            {{ t('userMenu.logout') }}
         </Link>
     </DropdownMenuItem>
 </template>

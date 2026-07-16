@@ -42,6 +42,12 @@ class Board extends Model
         return $this->hasMany(Note::class)->latest();
     }
 
+    /** @return HasMany<Label, $this> */
+    public function labels(): HasMany
+    {
+        return $this->hasMany(Label::class)->orderBy('name');
+    }
+
     /** @return BelongsToMany<User, $this, BoardUser> */
     public function collaborators(): BelongsToMany
     {

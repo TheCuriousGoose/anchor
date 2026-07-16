@@ -25,6 +25,7 @@ class BoardResource extends JsonResource
             'icon' => $this->icon,
             'tasks' => $this->whenLoaded('tasks', fn () => $this->tasks, []),
             'notes' => $this->whenLoaded('notes', fn () => $this->notes, []),
+            'labels' => $this->whenLoaded('labels', fn () => $this->labels, []),
             'isOwner' => $isOwner,
             'role' => $isOwner ? 'owner' : $this->collaborators->firstWhere('id', $user->id)?->pivot->role,
             'collaborators' => $isOwner

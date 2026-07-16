@@ -68,6 +68,22 @@ class NoteTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_note_body_is_sanitized_of_scripts_and_event_handlers()
+    {
+        $owner = User::factory()->create();
+        $board = $owner->boards()->create(['name' => 'Roadmap']);
+
+        $noteId = $this->actingAs($owner)
+            ->postJson(route('notes.store', $board), [
+                'title' => 'Ideas',
+                'body' => '<p onclick="steal()">Hello</p><script>alert(1)</script>',
+            ])
+            ->assertCreated()
+            ->json('id');
+
+        $this->assertDatabaseHas('notes', ['id' => $noteId, 'body' => '<p>Hello</p>']);
+    }
+
     public function test_non_collaborator_cannot_manage_notes()
     {
         $owner = User::factory()->create();

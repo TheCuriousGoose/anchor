@@ -36,7 +36,7 @@ class WorkspaceController extends Controller
     public function index(Request $request): Response
     {
         $boards = $this->accessibleBoardsQuery($request->user())
-            ->with(['tasks', 'notes', 'collaborators'])
+            ->with(['tasks.labels', 'notes', 'collaborators'])
             ->latest()
             ->get();
 
@@ -49,7 +49,7 @@ class WorkspaceController extends Controller
     {
         $this->authorize('view', $board);
 
-        $board->load(['tasks', 'notes', 'collaborators']);
+        $board->load(['tasks.labels', 'notes', 'collaborators', 'labels']);
 
         return Inertia::render('Workspace', [
             'board' => (new BoardResource($board))->resolve(),

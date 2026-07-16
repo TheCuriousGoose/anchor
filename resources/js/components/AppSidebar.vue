@@ -2,6 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { LayoutGrid, Plus, Search, Users } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppLogo from '@/components/AppLogo.vue';
 import BoardIcon from '@/components/BoardIcon.vue';
 import CommandSearch from '@/components/CommandSearch.vue';
@@ -25,6 +26,7 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 const page = usePage();
 const boards = computed(() => page.props.sidebarBoards);
 const { isCurrentUrl } = useCurrentUrl();
+const { t } = useI18n();
 
 const commandOpen = ref(false);
 const createOpen = ref(false);
@@ -46,23 +48,23 @@ const createOpen = ref(false);
                 class="mx-2 mt-1 flex h-9 items-center gap-2 rounded-md px-2 text-sm text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent"
                 @click="commandOpen = true">
                 <Search class="size-4" />
-                Search
+                {{ t('sidebar.search') }}
                 <span class="ml-auto text-[11px] text-sidebar-foreground/50">⌘K</span>
             </button>
         </SidebarHeader>
 
         <SidebarContent>
             <SidebarGroup>
-                <SidebarGroupLabel>Boards</SidebarGroupLabel>
-                <SidebarGroupAction title="New board" @click="createOpen = true">
+                <SidebarGroupLabel>{{ t('sidebar.boards') }}</SidebarGroupLabel>
+                <SidebarGroupAction :title="t('sidebar.newBoard')" @click="createOpen = true">
                     <Plus />
                 </SidebarGroupAction>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton as-child :is-active="isCurrentUrl('/boards')" tooltip="All boards">
+                        <SidebarMenuButton as-child :is-active="isCurrentUrl('/boards')" :tooltip="t('sidebar.allBoards')">
                             <Link href="/boards">
                                 <LayoutGrid />
-                                <span>All boards</span>
+                                <span>{{ t('sidebar.allBoards') }}</span>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

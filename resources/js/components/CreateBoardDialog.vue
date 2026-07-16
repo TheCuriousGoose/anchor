@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import BoardIconPicker from '@/components/BoardIconPicker.vue';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { request } from '@/lib/boardApi';
 import type { Board } from '@/types/board';
 
+const { t } = useI18n();
 const open = defineModel<boolean>('open', { default: false });
 const name = ref('');
 const icon = ref('list-todo');
@@ -40,7 +42,7 @@ async function submit(): Promise<void> {
         open.value = false;
         router.visit(`/boards/${board.id}`);
     } catch {
-        toast.error('Could not create the board. Try again.');
+        toast.error(t('createBoard.error'));
     } finally {
         saving.value = false;
     }
@@ -51,17 +53,16 @@ async function submit(): Promise<void> {
     <Dialog v-model:open="open">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
-                <DialogTitle>New board</DialogTitle>
-                <DialogDescription>Give this collection a short, useful
-                    name.</DialogDescription>
+                <DialogTitle>{{ t('createBoard.title') }}</DialogTitle>
+                <DialogDescription>{{ t('createBoard.description') }}</DialogDescription>
             </DialogHeader>
             <form @submit.prevent="submit">
-                <Input v-model="name" autofocus maxlength="80" placeholder="Product launch" />
+                <Input v-model="name" autofocus maxlength="80" :placeholder="t('createBoard.namePlaceholder')" />
                 <BoardIconPicker v-model="icon" class="mt-4" />
                 <DialogFooter class="mt-5">
-                    <Button type="button" variant="outline" @click="open = false">Cancel</Button>
+                    <Button type="button" variant="outline" @click="open = false">{{ t('common.cancel') }}</Button>
                     <Button type="submit" class="bg-brand text-brand-foreground hover:bg-brand/90"
-                        :disabled="!name.trim() || saving">Create board</Button>
+                        :disabled="!name.trim() || saving">{{ t('createBoard.submit') }}</Button>
                 </DialogFooter>
             </form>
         </DialogContent>

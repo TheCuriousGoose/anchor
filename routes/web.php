@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\BoardShareController;
+use App\Http\Controllers\LabelController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('boards/{board}/notes', [NoteController::class, 'store'])->name('notes.store');
     Route::patch('notes/{note}', [NoteController::class, 'update'])->name('notes.update');
     Route::delete('notes/{note}', [NoteController::class, 'destroy'])->name('notes.destroy');
+
+    Route::post('boards/{board}/labels', [LabelController::class, 'store'])->name('labels.store');
+    Route::patch('labels/{label}', [LabelController::class, 'update'])->name('labels.update');
+    Route::delete('labels/{label}', [LabelController::class, 'destroy'])->name('labels.destroy');
 });
 
 require __DIR__.'/settings.php';

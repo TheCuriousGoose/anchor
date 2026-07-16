@@ -6,6 +6,7 @@ use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
 use App\Models\Board;
 use App\Models\Note;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 
 class NoteController extends Controller
@@ -14,7 +15,13 @@ class NoteController extends Controller
     {
         $this->authorize('update', $board);
 
-        $note = $board->notes()->create($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('body', $data)) {
+            $data['body'] = HtmlSanitizer::clean($data['body']);
+        }
+
+        $note = $board->notes()->create($data);
 
         return response()->json($note, 201);
     }
@@ -23,7 +30,13 @@ class NoteController extends Controller
     {
         $this->authorize('update', $note);
 
-        $note->update($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('body', $data)) {
+            $data['body'] = HtmlSanitizer::clean($data['body']);
+        }
+
+        $note->update($data);
 
         return response()->json($note);
     }

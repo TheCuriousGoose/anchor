@@ -1,6 +1,22 @@
 export type Priority = 'low' | 'medium' | 'high' | null;
 export type BoardRole = 'owner' | 'editor' | 'viewer';
 export type CollaboratorRole = 'editor' | 'viewer';
+export type LabelColor =
+    | 'red'
+    | 'orange'
+    | 'amber'
+    | 'green'
+    | 'teal'
+    | 'blue'
+    | 'purple'
+    | 'pink'
+    | 'gray';
+
+export type Label = {
+    id: string;
+    name: string;
+    color: LabelColor;
+};
 
 export type Task = {
     id: string;
@@ -8,6 +24,8 @@ export type Task = {
     completed: boolean;
     position: number;
     priority: Priority;
+    due_date: string | null;
+    labels: Label[];
 };
 
 export type Note = {
@@ -31,6 +49,7 @@ export type Board = {
     icon: string;
     tasks: Task[];
     notes: Note[];
+    labels: Label[];
     isOwner: boolean;
     role: BoardRole;
     collaborators: Collaborator[];

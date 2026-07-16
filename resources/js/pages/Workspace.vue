@@ -2,8 +2,10 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Check, LayoutList, LogIn, Plus, UserPlus } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BoardContent from '@/components/BoardContent.vue';
 import CreateBoardDialog from '@/components/CreateBoardDialog.vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
@@ -13,6 +15,7 @@ import type { Board } from '@/types/board';
 
 const props = defineProps<{ board: Board | null }>();
 const page = usePage();
+const { t } = useI18n();
 const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
 const storageKey = 'anchor-guest-board';
 
@@ -27,6 +30,8 @@ const defaultGuestBoard: Board = {
             completed: false,
             position: 0,
             priority: null,
+            due_date: null,
+            labels: [],
         },
         {
             id: 'focus',
@@ -34,9 +39,12 @@ const defaultGuestBoard: Board = {
             completed: true,
             position: 1,
             priority: null,
+            due_date: null,
+            labels: [],
         },
     ],
     notes: [],
+    labels: [],
     isOwner: true,
     role: 'owner',
     collaborators: [],
@@ -143,10 +151,10 @@ async function importGuestBoard(): Promise<void> {
                 <LayoutList class="size-5" />
             </div>
             <h1 class="font-serif text-2xl font-semibold text-foreground">
-                Start with a board
+                {{ t('welcome.startBoardTitle') }}
             </h1>
             <Button class="mt-5 bg-brand text-brand-foreground hover:bg-brand/90" @click="createOpen = true">
-                <Plus class="size-4" /> New board
+                <Plus class="size-4" /> {{ t('welcome.newBoard') }}
             </Button>
         </div>
     </AppSidebarLayout>
@@ -158,17 +166,18 @@ async function importGuestBoard(): Promise<void> {
                     class="flex size-7 items-center justify-center rounded-md bg-brand text-brand-foreground shadow-sm">
                     <Check class="size-4" stroke-width="3" />
                 </div>
-                <span class="font-serif text-base font-semibold text-foreground">Anchor</span>
+                <span class="font-serif text-base font-semibold text-foreground">{{ t('welcome.appName') }}</span>
             </div>
             <div class="flex items-center gap-2">
+                <LanguageSwitcher />
                 <Button as-child variant="ghost" size="sm">
                     <Link href="/login">
-                        <LogIn class="size-4" /> Log in
+                        <LogIn class="size-4" /> {{ t('welcome.login') }}
                     </Link>
                 </Button>
                 <Button as-child size="sm" class="bg-brand text-brand-foreground hover:bg-brand/90">
                     <Link href="/register">
-                        <UserPlus class="size-4" /> Create an account
+                        <UserPlus class="size-4" /> {{ t('welcome.createAccount') }}
                     </Link>
                 </Button>
             </div>
