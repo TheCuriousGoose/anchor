@@ -108,7 +108,28 @@ export default {
         nav: {
             profile: 'Profile',
             security: 'Security',
+            notifications: 'Notifications',
             appearance: 'Appearance',
+        },
+        notifications: {
+            headTitle: 'Notification settings',
+            title: 'Email notifications',
+            description: 'Choose which emails Anchor sends you',
+            saveError: 'Could not save that setting.',
+            types: {
+                board_shared: {
+                    label: 'A board is shared with me',
+                    description: 'When someone gives you access to one of their boards.',
+                },
+                board_role_changed: {
+                    label: 'My role changes',
+                    description: 'When your access on a shared board changes between editor and viewer.',
+                },
+                board_access_revoked: {
+                    label: 'My access is removed',
+                    description: 'When someone removes your access to a shared board.',
+                },
+            },
         },
         profile: {
             headTitle: 'Profile settings',
@@ -256,6 +277,10 @@ export default {
         viewer: 'Viewer',
         removeAccess: 'Remove access',
         noOneYet: 'No one else has access yet.',
+        pending: 'Invited',
+        pendingHint: 'Gets access as soon as they sign up',
+        revokeInvite: 'Withdraw invitation',
+        invitationSent: 'Invitation sent to {email}.',
         inviteError:
             'Could not share the board. Check the email and try again.',
         roleError: 'Could not update access. Try again.',

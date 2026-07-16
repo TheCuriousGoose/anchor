@@ -39,10 +39,12 @@ export type Note = {
 };
 
 export type Collaborator = {
+    /** A user id when pending is false; a board_invitations id when it is true. */
     id: number;
-    name: string;
+    name: string | null;
     email: string;
     role: CollaboratorRole;
+    pending: boolean;
 };
 
 export type Board = {
@@ -55,6 +57,8 @@ export type Board = {
     isOwner: boolean;
     role: BoardRole;
     collaborators: Collaborator[];
+    /** Shared with an address that has no account yet. Owner-only; empty for everyone else. */
+    invitations: Collaborator[];
 };
 
 export type SidebarBoard = {

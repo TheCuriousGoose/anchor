@@ -52,7 +52,7 @@ class BoardController extends Controller
             return $board;
         });
 
-        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels'])))->resolve(), 201);
+        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels', 'invitations'])))->resolve(), 201);
     }
 
     public function store(StoreBoardRequest $request): JsonResponse
@@ -64,7 +64,7 @@ class BoardController extends Controller
             'icon' => $data['icon'] ?? '✓',
         ]);
 
-        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels'])))->resolve(), 201);
+        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels', 'invitations'])))->resolve(), 201);
     }
 
     public function update(UpdateBoardRequest $request, Board $board): JsonResponse
@@ -76,7 +76,7 @@ class BoardController extends Controller
         broadcast(new BoardUpdated($board))->toOthers();
         broadcast(new BoardListChanged($board->memberIds()))->toOthers();
 
-        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels'])))->resolve());
+        return response()->json((new BoardResource($board->load(['tasks.labels', 'notes', 'collaborators', 'labels', 'invitations'])))->resolve());
     }
 
     public function destroy(Request $request, Board $board): JsonResponse

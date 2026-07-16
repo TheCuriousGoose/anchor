@@ -50,6 +50,7 @@ const defaultGuestBoard: Board = {
     isOwner: true,
     role: 'owner',
     collaborators: [],
+    invitations: [],
 };
 
 const activeBoard = ref<Board | null>(null);

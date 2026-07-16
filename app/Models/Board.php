@@ -48,6 +48,12 @@ class Board extends Model
         return $this->hasMany(Label::class)->orderBy('name');
     }
 
+    /** @return HasMany<BoardInvitation, $this> */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(BoardInvitation::class);
+    }
+
     /** @return BelongsToMany<User, $this, BoardUser> */
     public function collaborators(): BelongsToMany
     {

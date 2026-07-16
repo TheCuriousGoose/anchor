@@ -13,8 +13,9 @@ class ShareBoardRequest extends FormRequest
      */
     public function rules(): array
     {
+        // No exists:users rule: an unknown address is an invitation, not a validation error.
         return [
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email' => ['required', 'email'],
             'role' => ['required', Rule::enum(BoardRole::class)],
         ];
     }

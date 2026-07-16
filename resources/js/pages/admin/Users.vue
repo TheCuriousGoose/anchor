@@ -145,7 +145,8 @@ defineOptions({
                                     :disabled="user.id === currentUserId"
                                     @update:model-value="(role) => changeRole(user, role as UserRole)"
                                 >
-                                    <SelectTrigger size="sm" class="w-28">
+                                    <!-- Wide enough for the longest translated role ("Beheerder"). -->
+                                    <SelectTrigger size="sm" class="w-36">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\NotificationType;
 use App\Enums\UserRole;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
@@ -30,6 +31,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon|null $email_verified_at
  * @property UserRole $role
  * @property CarbonImmutable|null $suspended_at
+ * @property array<string, bool>|null $notification_preferences
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -95,6 +97,23 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
     }
 
     /**
+     * Notifications are opt-out: anything the user hasn't explicitly turned off is on,
+     * so adding a new type doesn't need a backfill to reach existing accounts.
+     */
+    public function wantsNotification(NotificationType $type): bool
+    {
+        return (bool) ($this->notification_preferences[$type->value] ?? true);
+    }
+
+    /** @return array<string, bool> */
+    public function notificationPreferences(): array
+    {
+        return collect(NotificationType::cases())
+            ->mapWithKeys(fn (NotificationType $type) => [$type->value => $this->wantsNotification($type)])
+            ->all();
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -104,6 +123,7 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'notification_preferences' => 'array',
             'role' => UserRole::class,
             'suspended_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',

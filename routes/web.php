@@ -2,12 +2,16 @@
 
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\BoardShareController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WorkspaceController::class, 'home'])->name('home');
+
+// Deliberately outside the auth group: the whole point is that the recipient has no account yet.
+Route::get('invitations/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [WorkspaceController::class, 'dashboard'])->name('dashboard');
@@ -27,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('boards/{board}/share', [BoardShareController::class, 'store'])->name('boards.share.store');
     Route::patch('boards/{board}/share/{user}', [BoardShareController::class, 'update'])->name('boards.share.update');
     Route::delete('boards/{board}/share/{user}', [BoardShareController::class, 'destroy'])->name('boards.share.destroy');
+    Route::delete('boards/{board}/invitations/{invitation}', [BoardShareController::class, 'destroyInvitation'])->name('boards.invitations.destroy');
 
     Route::post('boards/{board}/notes', [NoteController::class, 'store'])->name('notes.store');
     Route::patch('notes/{note}', [NoteController::class, 'update'])->name('notes.update');

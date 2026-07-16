@@ -108,7 +108,28 @@ export default {
         nav: {
             profile: 'Profiel',
             security: 'Beveiliging',
+            notifications: 'Notificaties',
             appearance: 'Weergave',
+        },
+        notifications: {
+            headTitle: 'Notificatie-instellingen',
+            title: 'E-mailnotificaties',
+            description: 'Kies welke e-mails Anchor je stuurt',
+            saveError: 'Kon die instelling niet opslaan.',
+            types: {
+                board_shared: {
+                    label: 'Een board wordt met mij gedeeld',
+                    description: 'Wanneer iemand je toegang geeft tot een van zijn boards.',
+                },
+                board_role_changed: {
+                    label: 'Mijn rol wijzigt',
+                    description: 'Wanneer je toegang op een gedeeld board verandert tussen bewerker en kijker.',
+                },
+                board_access_revoked: {
+                    label: 'Mijn toegang wordt ingetrokken',
+                    description: 'Wanneer iemand je toegang tot een gedeeld board intrekt.',
+                },
+            },
         },
         profile: {
             headTitle: 'Profielinstellingen',
@@ -256,6 +277,10 @@ export default {
         viewer: 'Kijker',
         removeAccess: 'Toegang intrekken',
         noOneYet: 'Nog niemand anders heeft toegang.',
+        pending: 'Uitgenodigd',
+        pendingHint: 'Krijgt toegang zodra diegene zich aanmeldt',
+        revokeInvite: 'Uitnodiging intrekken',
+        invitationSent: 'Uitnodiging verstuurd naar {email}.',
         inviteError:
             'Kon het board niet delen. Controleer het e-mailadres en probeer het opnieuw.',
         roleError: 'Kon de toegang niet aanpassen. Probeer het opnieuw.',

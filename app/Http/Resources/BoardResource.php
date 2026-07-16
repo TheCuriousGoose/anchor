@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Board;
+use App\Models\BoardInvitation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -34,7 +35,24 @@ class BoardResource extends JsonResource
                     'name' => $collaborator->name,
                     'email' => $collaborator->email,
                     'role' => $collaborator->pivot->role,
+                    'pending' => false,
                 ])->values()
+                : [],
+            // Only the owner manages sharing, so only the owner is told who is still pending.
+            'invitations' => $isOwner
+                ? $this->whenLoaded(
+                    'invitations',
+                    fn () => $this->invitations
+                        ->filter(fn (BoardInvitation $invitation) => ! $invitation->isExpired())
+                        ->map(fn (BoardInvitation $invitation): array => [
+                            'id' => $invitation->id,
+                            'name' => null,
+                            'email' => $invitation->email,
+                            'role' => $invitation->role,
+                            'pending' => true,
+                        ])->values(),
+                    [],
+                )
                 : [],
         ];
     }
