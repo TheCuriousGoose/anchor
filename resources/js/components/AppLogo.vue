@@ -1,16 +1,24 @@
 <script setup lang="ts">
-import { Check } from '@lucide/vue';
+import { useI18n } from 'vue-i18n';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
+
+const { t } = useI18n();
 </script>
 
 <template>
     <div
-        class="flex aspect-square size-8 items-center justify-center rounded-md bg-brand text-brand-foreground shadow-sm"
+        class="flex aspect-square size-8 items-center justify-center rounded-lg bg-brand text-brand-foreground shadow-sm"
     >
-        <Check class="size-4" stroke-width="3" />
+        <AppLogoIcon class="size-5" />
     </div>
-    <div class="ml-2 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate font-serif leading-tight font-semibold"
-            >Anchor</span
+    <div class="ml-2 grid flex-1 text-left leading-tight">
+        <span class="truncate font-serif text-sm font-semibold tracking-tight"
+            >AnchorNotes</span
         >
+        <span
+            class="truncate text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase"
+        >
+            {{ t('brand.tagline') }}
+        </span>
     </div>
 </template>

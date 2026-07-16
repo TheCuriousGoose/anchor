@@ -26,6 +26,12 @@ class BoardRoleChanged extends Notification implements ShouldQueue
         return $notifiable->wantsNotification(NotificationType::BoardRoleChanged) ? ['mail'] : [];
     }
 
+    /** @return array<string, string> */
+    public function viaQueues(): array
+    {
+        return ['mail' => 'mail'];
+    }
+
     public function toMail(User $notifiable): MailMessage
     {
         return (new MailMessage)

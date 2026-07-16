@@ -10,10 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-/**
- * Queued, like every mail here: sending is network I/O and must not sit in the request
- * that triggered it. `php artisan dev` runs a queue listener alongside Reverb and Vite.
- */
+/** Queued mail is drained once per minute by the scheduler. */
 class BoardShared extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -28,6 +25,12 @@ class BoardShared extends Notification implements ShouldQueue
     public function via(User $notifiable): array
     {
         return $notifiable->wantsNotification(NotificationType::BoardShared) ? ['mail'] : [];
+    }
+
+    /** @return array<string, string> */
+    public function viaQueues(): array
+    {
+        return ['mail' => 'mail'];
     }
 
     public function toMail(User $notifiable): MailMessage

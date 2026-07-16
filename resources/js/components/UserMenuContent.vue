@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { LogOut, Settings } from '@lucide/vue';
+import { Info, LogOut, Settings, ShieldCheck } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 import {
     DropdownMenuGroup,
@@ -38,6 +38,18 @@ defineProps<Props>();
             <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
                 {{ t('userMenu.settings') }}
+            </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem :as-child="true">
+            <Link class="block w-full cursor-pointer" href="/about">
+                <Info class="mr-2 h-4 w-4" />
+                About AnchorNotes
+            </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem :as-child="true">
+            <Link class="block w-full cursor-pointer" href="/privacy">
+                <ShieldCheck class="mr-2 h-4 w-4" />
+                Privacy
             </Link>
         </DropdownMenuItem>
     </DropdownMenuGroup>

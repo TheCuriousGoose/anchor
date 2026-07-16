@@ -10,6 +10,8 @@ use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WorkspaceController::class, 'home'])->name('home');
+Route::inertia('about', 'About')->name('about');
+Route::inertia('privacy', 'Privacy')->name('privacy');
 
 // Deliberately outside the auth group: the whole point is that the recipient has no account yet.
 Route::get('invitations/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');

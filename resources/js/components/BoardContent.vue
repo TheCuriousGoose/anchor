@@ -2,6 +2,7 @@
 import { router, usePage } from '@inertiajs/vue3';
 import {
     CheckCircle2,
+    CalendarDays,
     GripVertical,
     Inbox,
     MoreHorizontal,
@@ -101,6 +102,8 @@ const renameOpen = ref(false);
 const shareOpen = ref(false);
 const labelsOpen = ref(false);
 const deleteOpen = ref(false);
+const deleteTaskOpen = ref(false);
+const deleteTaskTarget = ref<Task | null>(null);
 const taskDetailOpen = ref(false);
 const taskDetailTask = ref<Task | null>(null);
 const saving = ref(false);
@@ -125,9 +128,10 @@ const reorderableTasks = computed<Task[]>({
     get: () =>
         filter.value === 'open'
             ? board.tasks.filter(
-                (task) =>
-                    !task.completed || lingeringCompletedTaskIds.value.has(task.id),
-            )
+                  (task) =>
+                      !task.completed ||
+                      lingeringCompletedTaskIds.value.has(task.id),
+              )
             : board.tasks,
     set: (value) => {
         if (filter.value !== 'open') {
@@ -228,10 +232,6 @@ function taskEditingLabel(task: Task): string | null {
 
 function hasLabel(task: Task, label: Label): boolean {
     return task.labels.some((item: Label) => item.id === label.id);
-}
-
-function toDateInputValue(dueDate: string | null): string {
-    return dueDate ? dueDate.slice(0, 10) : '';
 }
 
 function isOverdue(task: Task): boolean {
@@ -347,23 +347,6 @@ async function updateTaskPriority(
     }
 }
 
-async function updateTaskDueDate(task: Task, value: string): Promise<void> {
-    const previous = task.due_date;
-    const dueDate = value ? value : null;
-    task.due_date = dueDate;
-
-    if (!props.isAuthenticated) {
-        return;
-    }
-
-    try {
-        await request(`/tasks/${task.id}`, 'PATCH', { due_date: dueDate });
-    } catch {
-        task.due_date = previous;
-        toast.error(t('board.toastDueDateError'));
-    }
-}
-
 async function toggleTaskLabel(
     task: Task,
     label: Label,
@@ -401,9 +384,16 @@ async function deleteTask(task: Task): Promise<void> {
 
         board.tasks = board.tasks.filter((item) => item.id !== task.id);
         refreshSidebarCounts();
+        deleteTaskOpen.value = false;
+        deleteTaskTarget.value = null;
     } catch {
         toast.error(t('board.toastDeleteTaskError'));
     }
+}
+
+function confirmDeleteTask(task: Task): void {
+    deleteTaskTarget.value = task;
+    deleteTaskOpen.value = true;
 }
 
 let reorderSnapshot: Task[] | null = null;
@@ -452,191 +442,376 @@ async function deleteBoard(): Promise<void> {
     <div class="mx-auto w-full max-w-4xl px-5 py-10 sm:px-10 md:py-16">
         <div class="mb-10 flex items-start justify-between gap-4">
             <div class="min-w-0">
-                <h1 class="truncate font-serif text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
+                <h1
+                    class="truncate font-serif text-3xl font-semibold tracking-normal text-foreground sm:text-4xl"
+                >
                     {{ board.name }}
                 </h1>
                 <p class="mt-2 text-sm text-muted-foreground">
-                    {{ t('board.openCompleted', { open: openCount, completed: completedCount }) }}
+                    {{
+                        t('board.openCompleted', {
+                            open: openCount,
+                            completed: completedCount,
+                        })
+                    }}
                 </p>
                 <p v-if="!canEdit" class="mt-1 text-xs text-muted-foreground">
                     {{ t('board.viewOnly') }}
                 </p>
             </div>
             <div class="flex shrink-0 items-center gap-2">
-                <PresenceAvatars v-if="isAuthenticated" :members="members" :current-user-id="currentUser?.id ?? 0" />
-                <Badge v-if="!board.isOwner" variant="secondary" class="capitalize">{{ board.role }}</Badge>
-                <span v-if="saving" class="hidden text-xs text-muted-foreground sm:inline">{{ t('common.saving') }}</span>
+                <PresenceAvatars
+                    v-if="isAuthenticated"
+                    :members="members"
+                    :current-user-id="currentUser?.id ?? 0"
+                />
+                <Badge
+                    v-if="!board.isOwner"
+                    variant="secondary"
+                    class="capitalize"
+                    >{{ board.role }}</Badge
+                >
+                <span
+                    v-if="saving"
+                    class="hidden text-xs text-muted-foreground sm:inline"
+                    >{{ t('common.saving') }}</span
+                >
                 <DropdownMenu v-if="isAuthenticated && canEdit">
                     <DropdownMenuTrigger as-child>
-                        <Button variant="ghost" size="icon" class="size-8" :title="t('board.boardMenu')">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            class="size-8"
+                            :title="t('board.boardMenu')"
+                        >
                             <MoreHorizontal class="size-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem @click="renameOpen = true">
-                            <Pencil class="size-4" /> {{ t('board.renameBoard') }}
+                            <Pencil class="size-4" />
+                            {{ t('board.renameBoard') }}
                         </DropdownMenuItem>
                         <DropdownMenuItem @click="labelsOpen = true">
                             <Tag class="size-4" /> {{ t('board.manageLabels') }}
                         </DropdownMenuItem>
-                        <DropdownMenuItem v-if="board.isOwner" @click="shareOpen = true">
-                            <Share2 class="size-4" /> {{ t('board.shareBoard') }}
+                        <DropdownMenuItem
+                            v-if="board.isOwner"
+                            @click="shareOpen = true"
+                        >
+                            <Share2 class="size-4" />
+                            {{ t('board.shareBoard') }}
                         </DropdownMenuItem>
-                        <DropdownMenuItem v-if="board.isOwner" variant="destructive" @click="deleteOpen = true">
-                            <Trash2 class="size-4" /> {{ t('board.deleteBoard') }}
+                        <DropdownMenuItem
+                            v-if="board.isOwner"
+                            variant="destructive"
+                            @click="deleteOpen = true"
+                        >
+                            <Trash2 class="size-4" />
+                            {{ t('board.deleteBoard') }}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
         </div>
 
-        <div class="mb-7 flex w-fit items-center rounded-md border border-border p-0.5">
-            <button v-for="tab in ['tasks', 'notes'] as const" :key="tab"
-                class="h-7 rounded px-3 text-xs font-medium capitalize transition-colors" :class="contentTab === tab
-                    ? 'bg-brand/10 text-brand'
-                    : 'text-muted-foreground hover:text-foreground'
-                    " @click="contentTab = tab">
+        <div
+            class="mb-7 flex w-fit items-center rounded-md border border-border p-0.5"
+        >
+            <button
+                v-for="tab in ['tasks', 'notes'] as const"
+                :key="tab"
+                class="h-7 rounded px-3 text-xs font-medium capitalize transition-colors"
+                :class="
+                    contentTab === tab
+                        ? 'bg-brand/10 text-brand'
+                        : 'text-muted-foreground hover:text-foreground'
+                "
+                @click="contentTab = tab"
+            >
                 {{ t(`board.tabs.${tab}`) }}
             </button>
         </div>
 
         <template v-if="contentTab === 'tasks'">
-            <form v-if="canEdit" class="mb-7 flex items-center gap-2 border-b border-border pb-4"
-                @submit.prevent="addTask">
+            <form
+                v-if="canEdit"
+                class="mb-7 flex items-center gap-2 border-b border-border pb-4"
+                @submit.prevent="addTask"
+            >
                 <Plus class="size-5 shrink-0 text-brand" />
-                <Input v-model="newTask"
+                <Input
+                    v-model="newTask"
                     class="h-10 border-0 bg-transparent px-1 text-base shadow-none focus-visible:ring-0"
-                    :placeholder="t('board.addTaskPlaceholder')" maxlength="255" />
+                    :placeholder="t('board.addTaskPlaceholder')"
+                    maxlength="255"
+                />
                 <Select v-model="newTaskPriority">
                     <SelectTrigger size="sm" class="w-28 text-xs">
                         <SelectValue :placeholder="t('board.priority.none')" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="none">{{ t('board.priority.none') }}</SelectItem>
-                        <SelectItem value="low">{{ t('board.priority.low') }}</SelectItem>
-                        <SelectItem value="medium">{{ t('board.priority.medium') }}</SelectItem>
-                        <SelectItem value="high">{{ t('board.priority.high') }}</SelectItem>
+                        <SelectItem value="none">{{
+                            t('board.priority.none')
+                        }}</SelectItem>
+                        <SelectItem value="low">{{
+                            t('board.priority.low')
+                        }}</SelectItem>
+                        <SelectItem value="medium">{{
+                            t('board.priority.medium')
+                        }}</SelectItem>
+                        <SelectItem value="high">{{
+                            t('board.priority.high')
+                        }}</SelectItem>
                     </SelectContent>
                 </Select>
-                <Button type="submit" size="sm" class="bg-brand text-brand-foreground hover:bg-brand/90"
-                    :disabled="!newTask.trim() || saving">{{ t('board.add') }}</Button>
+                <Button
+                    type="submit"
+                    size="sm"
+                    class="bg-brand text-brand-foreground hover:bg-brand/90"
+                    :disabled="!newTask.trim() || saving"
+                    >{{ t('board.add') }}</Button
+                >
             </form>
 
             <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div class="flex items-center rounded-md border border-border p-0.5">
-                    <button v-for="option in ['all', 'open', 'done'] as const" :key="option"
-                        class="h-7 rounded px-3 text-xs font-medium capitalize transition-colors" :class="filter === option
-                            ? 'bg-brand/10 text-brand'
-                            : 'text-muted-foreground hover:text-foreground'
-                            " @click="filter = option">
+                <div
+                    class="flex items-center rounded-md border border-border p-0.5"
+                >
+                    <button
+                        v-for="option in ['all', 'open', 'done'] as const"
+                        :key="option"
+                        class="h-7 rounded px-3 text-xs font-medium capitalize transition-colors"
+                        :class="
+                            filter === option
+                                ? 'bg-brand/10 text-brand'
+                                : 'text-muted-foreground hover:text-foreground'
+                        "
+                        @click="filter = option"
+                    >
                         {{ t(`board.filters.${option}`) }}
                     </button>
                 </div>
                 <div class="relative sm:ml-auto sm:w-52">
-                    <Search class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                    <Input v-model="search" class="h-8 bg-card pl-8 text-xs" :placeholder="t('board.filterPlaceholder')" />
+                    <Search
+                        class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+                    />
+                    <Input
+                        v-model="search"
+                        class="h-8 bg-card pl-8 text-xs"
+                        :placeholder="t('board.filterPlaceholder')"
+                    />
                 </div>
             </div>
 
             <div class="overflow-hidden rounded-md border border-border">
-                <draggable v-model="reorderableTasks" item-key="id" tag="div" class="divide-y divide-border"
-                    handle=".drag-handle" ghost-class="opacity-40" :disabled="!canReorder" @start="handleReorderStart"
-                    @end="handleReorderEnd">
+                <draggable
+                    v-model="reorderableTasks"
+                    item-key="id"
+                    tag="div"
+                    class="divide-y divide-border"
+                    handle=".drag-handle"
+                    ghost-class="opacity-40"
+                    :disabled="!canReorder"
+                    @start="handleReorderStart"
+                    @end="handleReorderEnd"
+                >
                     <template #item="{ element: task }">
-                        <div v-show="matchesFilter(task)"
-                            class="group flex min-h-14 flex-wrap items-center gap-3 px-4 py-2 transition-colors hover:bg-accent/50">
-                            <GripVertical v-if="canReorder && !task.completed"
-                                class="drag-handle size-4 shrink-0 cursor-grab text-muted-foreground/40 hover:text-muted-foreground" />
-                            <Checkbox :model-value="task.completed" :disabled="!canEdit"
-                                :aria-label="`Mark ${task.title} complete`" @update:model-value="toggleTask(task)" />
-                            <DropdownMenu>
-                                <DropdownMenuTrigger as-child>
-                                    <button type="button"
-                                        class="size-2.5 shrink-0 rounded-full disabled:cursor-not-allowed"
-                                        :class="priorityDotClass(task.priority)" :disabled="!canEdit"
-                                        :title="priorityLabel(task.priority)" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start">
-                                    <DropdownMenuItem v-for="option in priorityOptions" :key="option.value ?? 'none'"
-                                        @click="
-                                            updateTaskPriority(
-                                                task,
-                                                option.value,
-                                            )
-                                            ">
-                                        <span class="size-2.5 rounded-full" :class="priorityDotClass(option.value)
-                                            " />
-                                        {{ option.label }}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <button type="button" class="min-w-0 flex-1 truncate text-left text-sm hover:underline" :class="task.completed
-                                ? 'text-muted-foreground line-through'
-                                : 'text-foreground'
-                                " @click="openTaskDetail(task)">{{ task.title }}</button>
+                        <div
+                            v-show="matchesFilter(task)"
+                            class="group flex min-h-14 flex-wrap items-center gap-3 px-4 py-2 transition-colors hover:bg-accent/50"
+                            role="button"
+                            tabindex="0"
+                            @click="openTaskDetail(task)"
+                            @keydown.enter="openTaskDetail(task)"
+                            @keydown.space.prevent="openTaskDetail(task)"
+                        >
+                            <div @click.stop @keydown.stop>
+                                <GripVertical
+                                    v-if="canReorder && !task.completed"
+                                    class="drag-handle size-4 shrink-0 cursor-grab text-muted-foreground/40 hover:text-muted-foreground"
+                                />
+                            </div>
+                            <div @click.stop @keydown.stop>
+                                <Checkbox
+                                    :model-value="task.completed"
+                                    :disabled="!canEdit"
+                                    :aria-label="`Mark ${task.title} complete`"
+                                    @update:model-value="toggleTask(task)"
+                                />
+                            </div>
+                            <div @click.stop @keydown.stop>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger as-child>
+                                        <button
+                                            type="button"
+                                            class="size-2.5 shrink-0 rounded-full disabled:cursor-not-allowed"
+                                            :class="
+                                                priorityDotClass(task.priority)
+                                            "
+                                            :disabled="!canEdit"
+                                            :title="
+                                                priorityLabel(task.priority)
+                                            "
+                                        />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start">
+                                        <DropdownMenuItem
+                                            v-for="option in priorityOptions"
+                                            :key="option.value ?? 'none'"
+                                            @click="
+                                                updateTaskPriority(
+                                                    task,
+                                                    option.value,
+                                                )
+                                            "
+                                        >
+                                            <span
+                                                class="size-2.5 rounded-full"
+                                                :class="
+                                                    priorityDotClass(
+                                                        option.value,
+                                                    )
+                                                "
+                                            />
+                                            {{ option.label }}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            <button
+                                type="button"
+                                class="min-w-0 flex-1 truncate text-left text-sm hover:underline"
+                                :class="
+                                    task.completed
+                                        ? 'text-muted-foreground line-through'
+                                        : 'text-foreground'
+                                "
+                                @click="openTaskDetail(task)"
+                            >
+                                {{ task.title }}
+                            </button>
 
-                            <span v-if="taskEditingLabel(task)"
-                                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand">
+                            <span
+                                v-if="taskEditingLabel(task)"
+                                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand"
+                            >
                                 <Pencil class="size-2.5" />
-                                {{ t('realtime.editing', { name: taskEditingLabel(task) }) }}
+                                {{
+                                    t('realtime.editing', {
+                                        name: taskEditingLabel(task),
+                                    })
+                                }}
                             </span>
 
-                            <span v-for="label in task.labels" :key="label.id"
-                                class="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
-                                <span class="size-1.5 rounded-full" :class="labelDotClass(label)" />
+                            <span
+                                v-for="label in task.labels"
+                                :key="label.id"
+                                class="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground"
+                            >
+                                <span
+                                    class="size-1.5 rounded-full"
+                                    :class="labelDotClass(label)"
+                                />
                                 {{ label.name }}
                             </span>
 
-                            <DropdownMenu>
-                                <DropdownMenuTrigger as-child>
-                                    <button type="button" :disabled="!canEdit"
-                                        class="flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground opacity-100 hover:text-foreground disabled:pointer-events-none sm:opacity-0 sm:group-hover:opacity-100"
-                                        :title="t('board.labelsButton')">
-                                        <Tag class="size-3.5" />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" class="w-56">
-                                    <DropdownMenuCheckboxItem v-for="label in board.labels" :key="label.id" class="pl-2"
-                                        :model-value="hasLabel(task, label)"
-                                        @select.prevent
-                                        @update:model-value="
-                                            (checked) => toggleTaskLabel(task, label, Boolean(checked))
-                                            ">
-                                        <template #indicator-icon><span /></template>
-                                        <span class="mr-2 inline-block size-2.5 shrink-0 rounded-full"
-                                            :class="[labelDotClass(label), hasLabel(task, label) ? 'ring-2 ring-offset-1 ring-ring' : '']" />
-                                        {{ label.name }}
-                                    </DropdownMenuCheckboxItem>
-                                    <p v-if="board.labels.length === 0" class="px-2 py-1.5 text-xs text-muted-foreground">
-                                        {{ t('board.noLabelsYet') }}
-                                    </p>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem @select.prevent @click="labelsOpen = true">
-                                        {{ t('board.manageLabels') }}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div @click.stop @keydown.stop>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger as-child>
+                                        <button
+                                            type="button"
+                                            :disabled="!canEdit"
+                                            class="flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground opacity-100 hover:text-foreground disabled:pointer-events-none sm:opacity-0 sm:group-hover:opacity-100"
+                                            :title="t('board.labelsButton')"
+                                        >
+                                            <Tag class="size-3.5" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        align="start"
+                                        class="w-56"
+                                    >
+                                        <DropdownMenuCheckboxItem
+                                            v-for="label in board.labels"
+                                            :key="label.id"
+                                            class="pl-2"
+                                            :model-value="hasLabel(task, label)"
+                                            @select.prevent
+                                            @update:model-value="
+                                                (checked) =>
+                                                    toggleTaskLabel(
+                                                        task,
+                                                        label,
+                                                        Boolean(checked),
+                                                    )
+                                            "
+                                        >
+                                            <template #indicator-icon
+                                                ><span
+                                            /></template>
+                                            <span
+                                                class="mr-2 inline-block size-2.5 shrink-0 rounded-full"
+                                                :class="[
+                                                    labelDotClass(label),
+                                                    hasLabel(task, label)
+                                                        ? 'ring-2 ring-ring ring-offset-1'
+                                                        : '',
+                                                ]"
+                                            />
+                                            {{ label.name }}
+                                        </DropdownMenuCheckboxItem>
+                                        <p
+                                            v-if="board.labels.length === 0"
+                                            class="px-2 py-1.5 text-xs text-muted-foreground"
+                                        >
+                                            {{ t('board.noLabelsYet') }}
+                                        </p>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            @select.prevent
+                                            @click="labelsOpen = true"
+                                        >
+                                            {{ t('board.manageLabels') }}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
 
-                            <input v-if="canEdit" type="date" :value="toDateInputValue(task.due_date)"
-                                class="w-34 shrink-0 rounded border-0 bg-transparent text-xs outline-none focus:ring-1 focus:ring-ring scheme-light dark:scheme-dark"
-                                :class="isOverdue(task) ? 'font-medium text-destructive' : 'text-muted-foreground'"
-                                :title="t('board.dueDate')"
-                                @change="updateTaskDueDate(task, ($event.target as HTMLInputElement).value)" />
-                            <span v-else-if="task.due_date" class="shrink-0 text-xs"
-                                :class="isOverdue(task) ? 'font-medium text-destructive' : 'text-muted-foreground'">
+                            <span
+                                v-if="task.due_date"
+                                class="inline-flex shrink-0 items-center gap-1 text-xs"
+                                :class="
+                                    isOverdue(task)
+                                        ? 'font-medium text-destructive'
+                                        : 'text-muted-foreground'
+                                "
+                            >
+                                <CalendarDays class="size-3.5" />
                                 {{ formatDueDate(task.due_date) }}
                             </span>
 
-                            <Button v-if="canEdit" variant="ghost" size="icon"
+                            <Button
+                                v-if="canEdit"
+                                variant="ghost"
+                                size="icon"
                                 class="size-8 text-muted-foreground opacity-100 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
-                                :title="t('board.deleteTask')" @click="deleteTask(task)">
+                                :title="t('board.deleteTask')"
+                                @click.stop="confirmDeleteTask(task)"
+                                @keydown.stop
+                            >
                                 <Trash2 class="size-4" />
                             </Button>
                         </div>
                     </template>
                 </draggable>
-                <div v-if="visibleTasks.length === 0" class="flex flex-col items-center px-6 py-14 text-center">
-                    <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-brand/10 text-brand">
+                <div
+                    v-if="visibleTasks.length === 0"
+                    class="flex flex-col items-center px-6 py-14 text-center"
+                >
+                    <div
+                        class="mb-3 flex size-10 items-center justify-center rounded-full bg-brand/10 text-brand"
+                    >
                         <CheckCircle2 v-if="filter === 'done'" class="size-5" />
                         <Inbox v-else class="size-5" />
                     </div>
@@ -660,31 +835,90 @@ async function deleteBoard(): Promise<void> {
                 </p>
             </div>
 
-            <NotesPanel :board="board" :is-authenticated="isAuthenticated" :can-edit="canEdit"
-                :editing-label-for="editingLabelFor" :whisper-editing="whisperEditing" />
+            <NotesPanel
+                :board="board"
+                :is-authenticated="isAuthenticated"
+                :can-edit="canEdit"
+                :editing-label-for="editingLabelFor"
+                :whisper-editing="whisperEditing"
+            />
         </template>
     </div>
 
-    <RenameBoardDialog v-if="isAuthenticated" v-model:open="renameOpen" :board="board" />
-    <ShareBoardDialog v-if="isAuthenticated" v-model:open="shareOpen" :board="board" />
-    <LabelManagerDialog v-model:open="labelsOpen" :board="board" :is-authenticated="isAuthenticated" />
+    <RenameBoardDialog
+        v-if="isAuthenticated"
+        v-model:open="renameOpen"
+        :board="board"
+    />
+    <ShareBoardDialog
+        v-if="isAuthenticated"
+        v-model:open="shareOpen"
+        :board="board"
+    />
+    <LabelManagerDialog
+        v-model:open="labelsOpen"
+        :board="board"
+        :is-authenticated="isAuthenticated"
+    />
 
     <!-- Controlled rather than trigger-based: the trigger would live inside the dropdown,
          which unmounts it on select before the dialog can open. -->
     <AlertDialog v-model:open="deleteOpen">
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>{{ t('board.deleteConfirmTitle', { name: board.name }) }}</AlertDialogTitle>
-                <AlertDialogDescription>{{ t('board.deleteConfirmBody') }}</AlertDialogDescription>
+                <AlertDialogTitle>{{
+                    t('board.deleteConfirmTitle', { name: board.name })
+                }}</AlertDialogTitle>
+                <AlertDialogDescription>{{
+                    t('board.deleteConfirmBody')
+                }}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>{{ t('common.cancel') }}</AlertDialogCancel>
-                <AlertDialogAction class="bg-destructive text-white hover:bg-destructive/90" @click="deleteBoard">
+                <AlertDialogAction
+                    class="bg-destructive text-white hover:bg-destructive/90"
+                    @click="deleteBoard"
+                >
                     {{ t('board.deleteBoard') }}
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
-    <TaskDetailDialog v-model:open="taskDetailOpen" :task="taskDetailTask" :board="board"
-        :is-authenticated="isAuthenticated" :can-edit="canEdit" />
+    <AlertDialog
+        v-model:open="deleteTaskOpen"
+        @update:open="
+            (value) => {
+                if (!value) deleteTaskTarget = null;
+            }
+        "
+    >
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>{{
+                    t('board.deleteTaskConfirmTitle', {
+                        name: deleteTaskTarget?.title,
+                    })
+                }}</AlertDialogTitle>
+                <AlertDialogDescription>{{
+                    t('board.deleteTaskConfirmBody')
+                }}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>{{ t('common.cancel') }}</AlertDialogCancel>
+                <AlertDialogAction
+                    class="bg-destructive text-white hover:bg-destructive/90"
+                    @click="deleteTaskTarget && deleteTask(deleteTaskTarget)"
+                >
+                    {{ t('board.deleteTask') }}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    <TaskDetailDialog
+        v-model:open="taskDetailOpen"
+        :task="taskDetailTask"
+        :board="board"
+        :is-authenticated="isAuthenticated"
+        :can-edit="canEdit"
+    />
 </template>

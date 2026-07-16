@@ -1,4 +1,7 @@
 export default {
+    brand: {
+        tagline: 'Make room to think',
+    },
     common: {
         cancel: 'Cancel',
         save: 'Save',
@@ -39,7 +42,8 @@ export default {
             you: 'You',
             empty: 'No users match your search.',
             deleteTitle: 'Delete {name}?',
-            deleteDescription: 'This permanently removes the account and cannot be undone.',
+            deleteDescription:
+                'This permanently removes the account and cannot be undone.',
             deleteBoardsWarning:
                 'This also permanently deletes {count} board(s) they own, including any shared with other people.',
             deleteConfirm: 'Delete account',
@@ -60,7 +64,8 @@ export default {
         },
         boardDetail: {
             ownedBy: 'Owned by {name} ({email})',
-            readOnlyNotice: 'Read-only oversight view. Opening this board is recorded in the audit log.',
+            readOnlyNotice:
+                'Read-only oversight view. Opening this board is recorded in the audit log.',
             tasks: 'Tasks ({count})',
             notes: 'Notes ({count})',
             collaborators: 'Collaborators ({count})',
@@ -119,15 +124,18 @@ export default {
             types: {
                 board_shared: {
                     label: 'A board is shared with me',
-                    description: 'When someone gives you access to one of their boards.',
+                    description:
+                        'When someone gives you access to one of their boards.',
                 },
                 board_role_changed: {
                     label: 'My role changes',
-                    description: 'When your access on a shared board changes between editor and viewer.',
+                    description:
+                        'When your access on a shared board changes between editor and viewer.',
                 },
                 board_access_revoked: {
                     label: 'My access is removed',
-                    description: 'When someone removes your access to a shared board.',
+                    description:
+                        'When someone removes your access to a shared board.',
                 },
             },
         },
@@ -142,7 +150,8 @@ export default {
             save: 'Save',
             unverified: 'Your email address is unverified.',
             resend: 'Click here to re-send the verification email.',
-            verificationSent: 'A new verification link has been sent to your email address.',
+            verificationSent:
+                'A new verification link has been sent to your email address.',
         },
         photo: {
             title: 'Photo',
@@ -165,7 +174,8 @@ export default {
         security: {
             headTitle: 'Security settings',
             title: 'Update password',
-            description: 'Ensure your account is using a long, random password to stay secure',
+            description:
+                'Ensure your account is using a long, random password to stay secure',
             currentPassword: 'Current password',
             newPassword: 'New password',
             confirmPassword: 'Confirm password',
@@ -198,7 +208,8 @@ export default {
                 enabledDescription:
                     'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.',
                 verifyTitle: 'Verify authentication code',
-                verifyDescription: 'Enter the 6-digit code from your authenticator app',
+                verifyDescription:
+                    'Enter the 6-digit code from your authenticator app',
                 setupTitle: 'Enable two-factor authentication',
                 setupDescription:
                     'To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app',
@@ -271,10 +282,11 @@ export default {
     shareBoard: {
         title: 'Share "{name}"',
         description: 'Invite people to view or edit this board.',
-        emailPlaceholder: 'person@example.com',
+        emailPlaceholder: "person{'@'}example.com",
         invite: 'Invite',
         editor: 'Editor',
         viewer: 'Viewer',
+        members: 'People with access',
         removeAccess: 'Remove access',
         noOneYet: 'No one else has access yet.',
         pending: 'Invited',
@@ -312,11 +324,15 @@ export default {
         emptyTryAnotherSearch: 'Try another search.',
         emptyAddTaskAbove: 'Add a task above.',
         deleteTask: 'Delete task',
+        deleteTaskConfirmTitle: 'Delete "{name}"?',
+        deleteTaskConfirmBody:
+            'This permanently deletes the task. This cannot be undone.',
         labelsButton: 'Labels',
         noLabelsYet: 'No labels yet',
         newLabelPlaceholder: 'New label',
         addLabel: 'Add',
         dueDate: 'Due date',
+        clearDueDate: 'Clear due date',
         overdue: 'Overdue',
         notesCount: '0 notes | 1 note | {count} notes',
         newNote: 'New note',
@@ -398,6 +414,81 @@ export default {
         roleChangedTo: {
             editor: 'You can now edit this board',
             viewer: 'Your access to this board is now view-only',
+        },
+    },
+    public: {
+        github: 'GitHub',
+        navigation: {
+            about: 'About',
+            privacy: 'Privacy',
+            signIn: 'Sign in',
+            openWorkspace: 'Open workspace',
+        },
+        footer: {
+            copyright: '© {year} AnchorNotes. Made for calmer work.',
+        },
+        about: {
+            pageTitle: 'About',
+            eyebrow: 'About',
+            introduction:
+                'AnchorNotes is a shared workspace for boards, tasks, and notes. It keeps the next piece of work close to the conversation around it.',
+            context: {
+                title: 'Keep work in context',
+                description:
+                    'Create boards for projects, add tasks as they come up, and keep useful notes alongside the work.',
+            },
+            sharing: {
+                title: 'Share only what is needed',
+                description:
+                    'Invite collaborators to individual boards, so project work stays separate from everything else.',
+            },
+            simple: {
+                title: 'Simple by default',
+                description:
+                    'The aim is a practical place to organise work, without turning every project into a process.',
+            },
+            openSourcePrefix:
+                'AnchorNotes is open source. Browse the project on',
+            contactPrefix: 'Questions or feedback:',
+            openApp: 'Open AnchorNotes',
+        },
+        privacy: {
+            pageTitle: 'Privacy',
+            eyebrow: 'Privacy',
+            heading: 'Privacy disclaimer',
+            lastUpdated: 'Last updated July 16, 2026',
+            scope: {
+                title: 'What this page covers',
+                description:
+                    'This privacy disclaimer explains, in plain language, how information in AnchorNotes is used to provide the service. It is an informational summary and should be reviewed alongside any organisation-specific privacy requirements that apply to your workspace.',
+            },
+            workspaceData: {
+                title: 'Information in your workspace',
+                description:
+                    'AnchorNotes stores the account details, boards, tasks, notes, attachments, and collaboration information that you or your collaborators add. This information is used to authenticate users, show the right workspace content, and enable collaboration features such as sharing and invitations.',
+            },
+            access: {
+                title: 'How access works',
+                description:
+                    'Workspace content is available to the account owner and to people who have been granted access to a board. Please choose collaborators carefully and remove access when it is no longer needed. Account security also depends on using a strong, unique password and protecting your sign-in methods.',
+            },
+            retention: {
+                title: 'Retention and deletion',
+                description:
+                    'Information remains in AnchorNotes while it is needed for the workspace or until it is removed through the application. Removing a board, note, task, or account may affect related workspace content. If you need help with data access or removal, contact the administrator responsible for your AnchorNotes installation.',
+            },
+            changes: {
+                title: 'Changes to this disclaimer',
+                description:
+                    'This page may change as AnchorNotes evolves. The date at the top indicates when it was last updated. Continued use of the service after an update means you should review the revised information.',
+            },
+            help: {
+                title: 'Need help?',
+                contactPrefix:
+                    'For questions about privacy or your information, email',
+                sourcePrefix:
+                    'AnchorNotes is open source. The source code is available on',
+            },
         },
     },
 };

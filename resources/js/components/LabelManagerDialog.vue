@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Trash2 } from '@lucide/vue';
-import { ref } from 'vue';
+import { Check, Plus, Tag, Trash2 } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,17 @@ const { t } = useI18n();
 
 const newLabelName = ref('');
 const newLabelColor = ref<LabelColor>('blue');
+const labelUsageCounts = computed(() => {
+    const counts = new Map<string, number>();
+
+    props.board?.tasks.forEach((task) => {
+        task.labels.forEach((label) => {
+            counts.set(label.id, (counts.get(label.id) ?? 0) + 1);
+        });
+    });
+
+    return counts;
+});
 
 async function createLabel(): Promise<void> {
     const board = props.board;
@@ -78,66 +89,117 @@ async function deleteLabel(label: Label): Promise<void> {
 
 <template>
     <Dialog v-model:open="open">
-        <DialogContent class="sm:max-w-md">
+        <DialogContent class="gap-0 overflow-hidden p-0 sm:max-w-lg">
             <DialogHeader>
-                <DialogTitle>{{ t('labelManager.title') }}</DialogTitle>
-                <DialogDescription>{{
-                    t('labelManager.description')
-                }}</DialogDescription>
+                <div class="flex items-start gap-3 px-6 pt-6">
+                    <div
+                        class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand"
+                    >
+                        <Tag class="size-5" />
+                    </div>
+                    <div class="min-w-0">
+                        <DialogTitle>{{ t('labelManager.title') }}</DialogTitle>
+                        <DialogDescription class="mt-1">{{
+                            t('labelManager.description')
+                        }}</DialogDescription>
+                    </div>
+                </div>
             </DialogHeader>
 
-            <form class="flex flex-col gap-2" @submit.prevent="createLabel">
-                <Input
-                    v-model="newLabelName"
-                    class="w-full"
-                    maxlength="50"
-                    :placeholder="t('labelManager.namePlaceholder')"
-                />
-                <div class="flex items-center gap-2">
-                    <div class="flex flex-1 items-center gap-1">
+            <div class="px-6 pt-6 pb-5">
+                <form
+                    class="rounded-lg border border-border bg-muted/30 p-3"
+                    @submit.prevent="createLabel"
+                >
+                    <div class="flex gap-2">
+                        <Input
+                            v-model="newLabelName"
+                            class="bg-background"
+                            maxlength="50"
+                            :placeholder="t('labelManager.namePlaceholder')"
+                        />
+                        <Button
+                            type="submit"
+                            class="shrink-0"
+                            :disabled="!newLabelName.trim()"
+                        >
+                            <Plus class="size-4" />
+                            {{ t('labelManager.add') }}
+                        </Button>
+                    </div>
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
                         <button
                             v-for="color in labelColors"
                             :key="color"
                             type="button"
-                            class="size-5 shrink-0 rounded-full ring-offset-2 ring-offset-background transition-all"
+                            class="flex size-6 shrink-0 items-center justify-center rounded-full ring-offset-2 ring-offset-muted transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                             :class="[
                                 labelColorClasses[color],
-                                newLabelColor === color ? 'ring-2 ring-ring' : '',
+                                newLabelColor === color
+                                    ? 'scale-110 ring-2 ring-ring'
+                                    : '',
                             ]"
+                            :aria-label="color"
+                            :aria-pressed="newLabelColor === color"
                             @click="newLabelColor = color"
-                        />
+                        >
+                            <Check
+                                v-if="newLabelColor === color"
+                                class="size-3.5 text-white"
+                            />
+                        </button>
                     </div>
-                    <Button type="submit" size="sm" :disabled="!newLabelName.trim()">
-                        {{ t('labelManager.add') }}
-                    </Button>
-                </div>
-            </form>
+                </form>
 
-            <div v-if="board?.labels.length" class="mt-4 flex flex-col gap-2">
                 <div
-                    v-for="label in board.labels"
-                    :key="label.id"
-                    class="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+                    v-if="board?.labels.length"
+                    class="mt-6 overflow-hidden rounded-lg border border-border"
                 >
-                    <span
-                        class="size-2.5 shrink-0 rounded-full"
-                        :class="labelColorClasses[label.color]"
-                    />
-                    <span class="min-w-0 flex-1 truncate">{{ label.name }}</span>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        class="size-8 text-muted-foreground hover:text-destructive"
-                        :title="t('labelManager.delete')"
-                        @click="deleteLabel(label)"
+                    <div
+                        class="flex items-center justify-between border-b border-border bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground"
                     >
-                        <Trash2 class="size-4" />
-                    </Button>
+                        <span>{{ t('labelManager.title') }}</span>
+                        <span>{{ board.labels.length }}</span>
+                    </div>
+                    <div class="divide-y divide-border">
+                        <div
+                            v-for="label in board.labels"
+                            :key="label.id"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40"
+                        >
+                            <span
+                                class="size-3 shrink-0 rounded-full ring-2 ring-background"
+                                :class="labelColorClasses[label.color]"
+                            />
+                            <span
+                                class="min-w-0 flex-1 truncate text-sm font-medium"
+                                >{{ label.name }}</span
+                            >
+                            <span
+                                class="text-xs text-muted-foreground"
+                                :title="`${labelUsageCounts.get(label.id) ?? 0} tasks`"
+                            >
+                                {{ labelUsageCounts.get(label.id) ?? 0 }}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                                :title="t('labelManager.delete')"
+                                @click="deleteLabel(label)"
+                            >
+                                <Trash2 class="size-4" />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
+                <p
+                    v-else
+                    class="mt-6 rounded-lg border border-dashed border-border px-4 py-7 text-center text-sm text-muted-foreground"
+                >
+                    {{ t('labelManager.empty') }}
+                </p>
             </div>
-            <p v-else class="mt-4 text-xs text-muted-foreground">
-                {{ t('labelManager.empty') }}
-            </p>
         </DialogContent>
     </Dialog>
 </template>
