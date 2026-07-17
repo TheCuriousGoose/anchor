@@ -37,13 +37,12 @@ class BoardInvitationSent extends Notification implements ShouldQueue
         $invitation = $this->invitation->loadMissing(['board', 'inviter']);
 
         return (new MailMessage)
-            ->subject(__(':name invited you to ":board" on :app', [
+            ->subject(__(':name invited you to ":board" on AnchorNotes', [
                 'name' => $invitation->inviter->name,
                 'board' => $invitation->board->name,
-                'app' => config('app.name'),
             ]))
             ->greeting(__('Hi,'))
-            ->line(__(':name invited you to collaborate on the board ":board" as :role.', [
+            ->line(__('**:name** invited you to collaborate on **":board"** as **:role**.', [
                 'name' => $invitation->inviter->name,
                 'board' => $invitation->board->name,
                 'role' => __($invitation->role),

@@ -29,6 +29,10 @@ function isViewing(boardId: string): boolean {
  * Mounted once from the app sidebar, which is present on every authenticated page.
  */
 export function useUserChannel(): void {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
     const page = usePage();
     const { t } = useI18n();
     const userId = page.props.auth?.user?.id;
