@@ -10,7 +10,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
-defineProps<{
+const props = defineProps<{
+    email?: string;
     passwordRules: string;
 }>();
 
@@ -57,6 +58,7 @@ defineOptions({
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
+                    :default-value="props.email"
                 />
                 <InputError :message="errors.email" />
             </div>

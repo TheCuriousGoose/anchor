@@ -71,7 +71,7 @@ export function useBoardChannel(
         return entry.name;
     }
 
-    if (!enabled) {
+    if (!enabled || typeof window === 'undefined') {
         return {
             members,
             editingLabelFor,
